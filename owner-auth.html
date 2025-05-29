@@ -11,16 +11,50 @@
     .auth-card { max-width: 370px; margin: 70px auto; background: #fff; border-radius: 14px; box-shadow: 0 3px 14px #0001; padding: 34px 28px 24px; }
     .form-control { font-size: 1.1rem; }
     .error-msg { color: #dc3545; margin-top: 10px; }
+    .main-title {
+      font-size: 1.35rem;
+      font-weight: bold;
+      margin-bottom: 14px;
+      letter-spacing: 1.5px;
+      text-align: center;
+      color: #b30000; /* أحمر قاني */
+      text-shadow:
+        0 2px 8px #b3000050,
+        0 1px 0 #fff,
+        0 4px 12px #b3000030;
+      padding-top: 2px;
+      padding-bottom: 2px;
+      user-select: none;
+      direction: rtl;
+      min-height: 2.5em;
+    }
     .logo {
       display: block;
       margin: 0 auto 18px auto;
       font-size: 2.8rem;
       text-align: center;
+      filter: drop-shadow(0 3px 8px #b3000022);
+    }
+    .type-cursor {
+      display: inline-block;
+      width: .6ch;
+      background: #b30000;
+      border-radius: 2px;
+      margin-right: 2px;
+      margin-left: 2px;
+      animation: blink 0.8s infinite;
+      height: 1em;
+      vertical-align: middle;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
     }
   </style>
 </head>
 <body>
   <div class="auth-card">
+    <div class="main-title" id="mainTitle"></div>
     <span class="logo">🏠</span>
     <h2 class="mb-3 text-center">صفحة دخول الملاك</h2>
     <div class="mb-3">
@@ -34,6 +68,22 @@
     <div class="error-msg" id="errorMsg"></div>
   </div>
   <script>
+    // Typewriter effect for main title
+    const titleText = "نظام تسجيل الزيارات<br>كمبوند كنز";
+    const mainTitle = document.getElementById("mainTitle");
+    let i = 0;
+
+    function typeWriter() {
+      if (i < titleText.length) {
+        mainTitle.innerHTML = titleText.slice(0, i + 1) + '<span class="type-cursor"></span>';
+        i++;
+        setTimeout(typeWriter, 40);
+      } else {
+        mainTitle.innerHTML = titleText; // Remove cursor at end
+      }
+    }
+    typeWriter();
+
     document.getElementById("showPass").addEventListener("change", function() {
       document.getElementById("code").type = this.checked ? "text" : "password";
     });
