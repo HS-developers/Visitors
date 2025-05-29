@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>نظام متابعة الزيارات - كمبوند كنز</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f4f8fb;
+      padding: 15px;
+      min-height: 100vh;
+    }
+    .container-card {
+      max-width: 540px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 34px 28px 24px;
+      border-radius: 18px;
+      box-shadow: 0 4px 16px #0002;
+    }
+    .main-title-3d {
+      text-align: center;
+      font-size: 2.1rem;
+      font-family: 'Cairo', sans-serif;
+      font-weight: 900;
+      color: #fff;
+      padding: 18px 0 20px 0;
+      margin-bottom: 24px;
+      border-radius: 16px;
+      letter-spacing: 1px;
+      background: linear-gradient(120deg, #007bff 0%, #20c997 60%, #ffb300 100%);
+      box-shadow:
+        0 1px 6px #0003,
+        0 8px 24px #007bff33,
+        0 0px 0px 8px #fff2 inset;
+      position: relative;
+      text-shadow:
+        1px 2px 4px #0006,
+        0 6px 18px #007bff66,
+        0 1px 0 #3338,
+        2px 3px 0 #ffb30044;
+      overflow: hidden;
+    }
+    .main-title-3d::before {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; top: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        120deg,
+        #fff1 0 4px,
+        #ffffff05 4px 20px
+      );
+      opacity: 0.4;
+      z-index: 1;
+      pointer-events: none;
+      border-radius: 16px;
+    }
+    .owner-info {
+      background-color: #f3f8fc;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 22px;
+      font-size: 1rem;
+    }
+    .owner-info span {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .alert {
+      padding: 12px;
+      background-color: #e7ffe2;
+      color: #178a3e;
+      border: 1px solid #abd9bb;
+      margin-top: 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      display: none;
+      text-align: center;
+    }
+    label {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .btn {
+      font-size: 1.08rem;
+      margin-top: 2px;
+      border-radius: 10px;
+    }
+    .logout-link {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      color: #dc3545;
+      font-weight: 600;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-card">
+    <div class="main-title-3d">
+      نظام متابعة الزيارات  - كمبوند كنز
+    </div>
+    <h2 class="mb-3 text-center text-primary">لوحة تحكم المالك</h2>
+    <div id="ownerFormContainer" style="display: none;">
+      <label>اسم المالك:</label>
+      <input type="text" id="ownerNameInput" class="form-control mb-3" placeholder="مثال: أحمد محمد" />
+
+      <label>رقم الوحدة:</label>
+      <input type="text" id="unitNumberInput" class="form-control mb-3" placeholder="مثال: A123" />
+
+      <label>رقم الهاتف:</label>
+      <input type="text" id="phoneInput" class="form-control mb-3" placeholder="مثال: 01012345678" />
+
+      <button class="btn btn-primary w-100" onclick="saveOwnerInfo()">حفظ البيانات والبدء</button>
+    </div>
+    <div id="mainForm" style="display: none;">
+      <div class="owner-info mb-4">
+        <span><strong>المالك:</strong> <span id="displayOwnerName"></span></span>
+        <span><strong>رقم الوحدة:</strong> <span id="displayUnitNumber"></span></span>
+        <span><strong>رقم الهاتف:</strong> <span id="displayPhone"></span></span>
+      </div>
+      <label>اسم الزائر:</label>
+      <input type="text" id="visitorName" class="form-control mb-3" placeholder="اسم الزائر" />
+
+      <label>رقم السيارة:</label>
+      <input type="text" id="carNumber" class="form-control mb-3" placeholder="اختياري" />
+
+      <button class="btn btn-success w-100 mb-2" onclick="submitVisit()">📥 تسجيل الزيارة</button>
+      <button class="btn btn-outline-primary w-100 mb-2" onclick="goToVisitsPage()">📄 عرض حالة الزيارات اليوم</button>
+      <div class="alert" id="confirmationAlert">✅ تم تأكيد دخول أحد الزوار</div>
+      <span class="logout-link" onclick="logout()">تسجيل خروج المالك</span>
+    </div>
+  </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      serverTimestamp,
+      onSnapshot,
+      query,
+      where
+    } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBNudtJkLa0ZuXu0DO1IPLYVC-PtEdBrOE",
+      authDomain: "zowar-c8626.firebaseapp.com",
+      projectId: "zowar-c8626",
+      storageBucket: "zowar-c8626.appspot.com",
+      messagingSenderId: "807825141119",
+      appId: "1:807825141119:web:db3b075d3f54474c3bbe4a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const ownerName = localStorage.getItem("ownerName");
+    const unitNumber = localStorage.getItem("unitNumber");
+    const phone = localStorage.getItem("phone");
+
+    const ownerForm = document.getElementById("ownerFormContainer");
+    const mainForm = document.getElementById("mainForm");
+
+    if (!ownerName || !unitNumber || !phone) {
+      ownerForm.style.display = "block";
+    } else {
+      mainForm.style.display = "block";
+      document.getElementById("displayOwnerName").textContent = ownerName;
+      document.getElementById("displayUnitNumber").textContent = unitNumber;
+      document.getElementById("displayPhone").textContent = phone;
+      startListeningForConfirmations(unitNumber);
+    }
+
+    window.saveOwnerInfo = function () {
+      const name = document.getElementById("ownerNameInput").value.trim();
+      // تعديل: تنظيف رقم الوحدة من المسافات وجعلها كابيتال
+      const unit = document.getElementById("unitNumberInput").value.trim().replace(/\s+/g, '').toUpperCase();
+      const phone = document.getElementById("phoneInput").value.trim();
+
+      if (!name || !unit || !phone) {
+        alert("يرجى إدخال جميع البيانات");
+        return;
+      }
+
+      localStorage.setItem("ownerName", name);
+      localStorage.setItem("unitNumber", unit);
+      localStorage.setItem("phone", phone);
+
+      ownerForm.style.display = "none";
+      mainForm.style.display = "block";
+
+      document.getElementById("displayOwnerName").textContent = name;
+      document.getElementById("displayUnitNumber").textContent = unit;
+      document.getElementById("displayPhone").textContent = phone;
+
+      startListeningForConfirmations(unit);
+    };
+
+    window.submitVisit = async function () {
+      const visitorName = document.getElementById("visitorName").value.trim();
+      const carNumber = document.getElementById("carNumber").value.trim();
+
+      if (!visitorName) {
+        alert("يرجى إدخال اسم الزائر");
+        return;
+      }
+
+      const today = new Date().toISOString().split("T")[0];
+
+      await addDoc(collection(db, "visits"), {
+        visitorName,
+        carNumber,
+        ownerName: localStorage.getItem("ownerName"),
+        unitNumber: localStorage.getItem("unitNumber"), // مخزنة بالفعل بشكل صحيح
+        phone: localStorage.getItem("phone"),
+        entered: false,
+        date: today,
+        timestamp: serverTimestamp()
+      });
+
+      alert("✅ تم تسجيل الزيارة بنجاح");
+      document.getElementById("visitorName").value = "";
+      document.getElementById("carNumber").value = "";
+
+      sessionStorage.setItem("soundAllowed", "true");
+    };
+
+    window.goToVisitsPage = function () {
+      sessionStorage.setItem("soundAllowed", "false");
+      window.location.href = "owner-visits.html";
+    };
+
+    function startListeningForConfirmations(unitNumber) {
+      const today = new Date().toISOString().split("T")[0];
+      const q = query(collection(db, "visits"),
+        where("unitNumber", "==", unitNumber),
+        where("date", "==", today)
+      );
+
+      let lastPlayedId = null;
+
+      onSnapshot(q, snapshot => {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === "modified") {
+            const data = change.doc.data();
+            const docId = change.doc.id;
+
+            if (data.entered && lastPlayedId !== docId) {
+              lastPlayedId = docId;
+
+              if (sessionStorage.getItem("soundAllowed") === "true") {
+                const audio = new Audio("dingo.mp3");
+                audio.play().catch(err => console.warn("لم يتم تشغيل الصوت:", err));
+                const alertDiv = document.getElementById("confirmationAlert");
+                alertDiv.style.display = "block";
+                setTimeout(() => alertDiv.style.display = "none", 5000);
+                sessionStorage.setItem("soundAllowed", "false");
+              }
+            }
+          }
+        });
+      });
+    }
+
+    window.logout = function() {
+      localStorage.removeItem("ownerName");
+      localStorage.removeItem("unitNumber");
+      localStorage.removeItem("phone");
+      sessionStorage.removeItem("ownerAuth");
+      window.location.href = "owner-auth.html";
+    }
+  </script>
+</body>
+</html>

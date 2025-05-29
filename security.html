@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>صفحة الأمن</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+      text-align: right;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .visit-card {
+      background-color: #fff3cd;
+      border-right: 5px solid #ffc107;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 10px;
+    }
+
+    .visit-card p {
+      margin: 5px 0;
+      font-size: 16px;
+    }
+
+    .no-result {
+      color: red;
+      text-align: center;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    .report-link {
+      margin-top: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>صفحة الأمن</h2>
+
+    <label>أدخل رقم الوحدة:</label>
+    <input type="text" id="unitInput" placeholder="مثال: A123" />
+
+    <button onclick="searchVisits()">بحث</button>
+
+    <div id="result"></div>
+
+    <div class="report-link">
+      <a href="report.html">
+        <button style="background-color:#28a745;">📋 عرض تقارير الزيارات</button>
+      </a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      where,
+      getDocs,
+      updateDoc,
+      doc
+    } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBNudtJkLa0ZuXu0DO1IPLYVC-PtEdBrOE",
+      authDomain: "zowar-c8626.firebaseapp.com",
+      projectId: "zowar-c8626",
+      storageBucket: "zowar-c8626.appspot.com",
+      messagingSenderId: "807825141119",
+      appId: "1:807825141119:web:db3b075d3f54474c3bbe4a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    function normalizeUnit(unit) {
+      return unit.replace(/\s+/g, '').toUpperCase();
+    }
+
+    function getTodayDate() {
+      const today = new Date();
+      return today.toISOString().split("T")[0];
+    }
+
+    window.searchVisits = async function () {
+      const unitRaw = document.getElementById("unitInput").value;
+      const unitNumber = normalizeUnit(unitRaw);
+      const today = getTodayDate();
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "";
+
+      if (!unitNumber) {
+        resultDiv.innerHTML = `<p class="no-result">يرجى إدخال رقم الوحدة.</p>`;
+        return;
+      }
+
+      const q = query(collection(db, "visits"),
+        where("unitNumber", "==", unitNumber),
+        where("date", "==", today)
+      );
+
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        resultDiv.innerHTML = `<p class="no-result">لا توجد زيارات لليوم.</p>`;
+        return;
+      }
+
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const card = document.createElement("div");
+        card.classList.add("visit-card");
+        card.innerHTML = `
+          <p><strong>اسم الزائر:</strong> ${data.visitorName}</p>
+          <p><strong>رقم السيارة:</strong> ${data.carNumber || 'غير مسجل'}</p>
+          <p><strong>اسم المالك:</strong> ${data.ownerName}</p>
+          <p><strong>رقم الوحدة:</strong> ${data.unitNumber}</p>
+          <p><strong>تاريخ الزيارة:</strong> ${data.date}</p>
+        `;
+
+        if (!data.entered) {
+          const confirmBtn = document.createElement("button");
+          confirmBtn.textContent = "تأكيد الدخول";
+          confirmBtn.onclick = () => confirmEntry(docSnap.id, card);
+          card.appendChild(confirmBtn);
+        } else {
+          const status = document.createElement("p");
+          status.textContent = "✅ تم الدخول";
+          status.style.color = "#28a745";
+          status.style.fontWeight = "bold";
+          card.appendChild(status);
+        }
+
+        resultDiv.appendChild(card);
+      });
+    };
+
+    async function confirmEntry(docId, cardElement) {
+      const docRef = doc(db, "visits", docId);
+      await updateDoc(docRef, { entered: true });
+
+      // إظهار رسالة تأكيد
+      const confirmMsg = document.createElement("p");
+      confirmMsg.textContent = "✅ تم تأكيد دخول الزائر";
+      confirmMsg.style.color = "#28a745";
+      confirmMsg.style.fontWeight = "bold";
+      confirmMsg.style.marginTop = "10px";
+      cardElement.appendChild(confirmMsg);
+
+      // عبارة "تم الدخول"
+      const statusTag = document.createElement("p");
+      statusTag.textContent = "✅ تم الدخول";
+      statusTag.style.color = "#155724";
+      statusTag.style.fontSize = "18px";
+      statusTag.style.fontWeight = "bold";
+      cardElement.appendChild(statusTag);
+
+      // إزالة زر التأكيد
+      const btn = cardElement.querySelector("button");
+      if (btn) btn.remove();
+    }
+
+    window.confirmEntry = confirmEntry;
+  </script>
+</body>
+</html>
