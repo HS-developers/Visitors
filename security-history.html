@@ -210,6 +210,15 @@
                 : new Date(data.entryTime).toLocaleTimeString())
             : "<span class='text-muted'>—</span>";
 
+          // Format date (yyyy-mm-dd) to dd / mm / yyyy
+          let visitDate = "";
+          if (data.date) {
+            const parts = data.date.split("-");
+            if (parts.length === 3) {
+              visitDate = `${parts[2]} / ${parts[1]} / ${parts[0]}`;
+            }
+          }
+
           const div = document.createElement("div");
           div.className = "visit";
           div.innerHTML = `
@@ -226,6 +235,7 @@
               <strong>الزائر:</strong>&nbsp; ${data.visitorName}
             </div>
             <div><strong>رقم السيارة:</strong> ${data.carNumber || "غير محدد"}</div>
+            <div><strong>تاريخ الزيارة:</strong> ${visitDate || "غير متوفر"}</div>
             <div><strong>وقت التسجيل:</strong> ${data.timestamp?.toDate().toLocaleTimeString() || "غير متوفر"}</div>
             <div><strong>وقت الدخول:</strong> ${entryTimeText}</div>
           `;
