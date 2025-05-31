@@ -50,6 +50,41 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0; }
     }
+    .forgot-link {
+      display: block;
+      text-align: center;
+      margin-top: 12px;
+      color: #007bff;
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+    .modal-bg {
+      background: rgba(0,0,0,.18);
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .modal-content-custom {
+      background: #fff;
+      border-radius: 10px;
+      padding: 24px 16px 14px;
+      max-width: 320px;
+      width: 97%;
+      box-shadow: 0 4px 16px #0002;
+    }
+    .modal-content-custom input {
+      margin-bottom: 10px;
+    }
+    .close-modal-btn {
+      margin-top: 8px;
+      display: block;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -58,15 +93,36 @@
     <span class="logo">🏠</span>
     <h2 class="mb-3 text-center">صفحة دخول الملاك</h2>
     <div class="mb-3">
-      <input type="password" id="code" class="form-control" placeholder="أدخل الكود السري" autocomplete="off" />
+      <input type="password" id="code" class="form-control" placeholder="أدخل كلمة السر" autocomplete="off" />
       <div class="form-check mt-2 text-end">
         <input type="checkbox" id="showPass" class="form-check-input" />
-        <label class="form-check-label" for="showPass">عرض الكود</label>
+        <label class="form-check-label" for="showPass">عرض كلمة السر</label>
       </div>
     </div>
     <button class="btn btn-primary w-100" onclick="checkCode()">دخول</button>
     <div class="error-msg" id="errorMsg"></div>
+    <span class="forgot-link" onclick="showResetModal()">نسيت كلمة السر؟</span>
   </div>
+
+  <!-- Modal for password reset -->
+  <div id="resetModal" class="modal-bg" style="display:none;">
+    <div class="modal-content-custom">
+      <div id="resetStep1">
+        <label for="resetMaster">أدخل الكود السري العام (1234):</label>
+        <input type="password" id="resetMaster" class="form-control" autocomplete="off" />
+        <button class="btn btn-primary w-100" onclick="verifyMasterCode()">تأكيد</button>
+        <div class="error-msg" id="resetError1"></div>
+      </div>
+      <div id="resetStep2" style="display:none;">
+        <label for="newPass">أدخل كلمة سر جديدة:</label>
+        <input type="password" id="newPass" class="form-control" autocomplete="off" />
+        <button class="btn btn-success w-100" onclick="saveNewPassword()">حفظ</button>
+        <div class="error-msg" id="resetError2"></div>
+      </div>
+      <button class="btn btn-outline-secondary close-modal-btn" onclick="closeResetModal()">إغلاق</button>
+    </div>
+  </div>
+
   <script>
     // Typewriter effect for main title
     const titleText = "نظام متابعة الزيارات<br>كمبوند كنز";
@@ -84,19 +140,100 @@
     }
     typeWriter();
 
+    // Show/hide password
     document.getElementById("showPass").addEventListener("change", function() {
       document.getElementById("code").type = this.checked ? "text" : "password";
     });
+
+    // Main check function
     function checkCode() {
       const code = document.getElementById("code").value.trim();
       const errorMsg = document.getElementById("errorMsg");
-      if (code === "1234") {
-        sessionStorage.setItem("ownerAuth", "true");
-        window.location.href = "owner-dashboard.html";
+      const savedPassword = localStorage.getItem("ownerPassword");
+
+      errorMsg.textContent = "";
+
+      // أول دخول: تحقق من الكود العام
+      if (savedPassword === null) {
+        if (code === "1234") {
+          // اطلب من المالك تعيين كلمة سر جديدة
+          setTimeout(() => {
+            let newPass = prompt("أدخل كلمة سر جديدة خاصة بك (4 أحرف أو أكثر):");
+            if (newPass && newPass.length >= 4) {
+              localStorage.setItem("ownerPassword", newPass);
+              sessionStorage.setItem("ownerAuth", "true");
+              window.location.href = "owner-dashboard.html";
+            } else {
+              errorMsg.textContent = "يرجى إدخال كلمة سر لا تقل عن 4 أحرف.";
+            }
+          }, 200);
+        } else {
+          errorMsg.textContent = "الكود العام غير صحيح.";
+        }
       } else {
-        errorMsg.textContent = "كود غير صحيح، حاول مرة أخرى";
+        // دخول لاحق: تحقق من كلمة السر الخاصة
+        if (code === savedPassword) {
+          sessionStorage.setItem("ownerAuth", "true");
+          window.location.href = "owner-dashboard.html";
+        } else {
+          errorMsg.textContent = "كلمة السر غير صحيحة، حاول مرة أخرى.";
+        }
       }
     }
+
+    // Modal password reset logic
+    function showResetModal() {
+      document.getElementById("resetModal").style.display = "flex";
+      document.getElementById("resetStep1").style.display = "block";
+      document.getElementById("resetStep2").style.display = "none";
+      document.getElementById("resetMaster").value = "";
+      document.getElementById("newPass").value = "";
+      document.getElementById("resetError1").textContent = "";
+      document.getElementById("resetError2").textContent = "";
+    }
+
+    function closeResetModal() {
+      document.getElementById("resetModal").style.display = "none";
+    }
+
+    function verifyMasterCode() {
+      const code = document.getElementById("resetMaster").value.trim();
+      const errorMsg = document.getElementById("resetError1");
+      errorMsg.textContent = "";
+      if (code === "1234") {
+        // أظهر خطوة تعيين كلمة سر جديدة
+        document.getElementById("resetStep1").style.display = "none";
+        document.getElementById("resetStep2").style.display = "block";
+      } else {
+        errorMsg.textContent = "الكود العام غير صحيح.";
+      }
+    }
+
+    function saveNewPassword() {
+      const newPass = document.getElementById("newPass").value.trim();
+      const errorMsg = document.getElementById("resetError2");
+      errorMsg.textContent = "";
+      if (!newPass || newPass.length < 4) {
+        errorMsg.textContent = "يرجى إدخال كلمة سر لا تقل عن 4 أحرف.";
+        return;
+      }
+      localStorage.setItem("ownerPassword", newPass);
+      closeResetModal();
+      alert("تم تعيين كلمة سر جديدة بنجاح. يمكنك الآن الدخول بكلمة السر الجديدة.");
+      document.getElementById("code").value = "";
+      document.getElementById("code").focus();
+    }
+
+    // Enter key support
+    document.getElementById("code").addEventListener("keydown", function(e) {
+      if(e.key === "Enter") checkCode();
+    });
+    document.getElementById("resetMaster").addEventListener("keydown", function(e) {
+      if(e.key === "Enter") verifyMasterCode();
+    });
+    document.getElementById("newPass").addEventListener("keydown", function(e) {
+      if(e.key === "Enter") saveNewPassword();
+    });
   </script>
 </body>
 </html>
