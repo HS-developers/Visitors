@@ -168,6 +168,11 @@
     <span class="logout-link" onclick="logout()">تسجيل خروج الأمن</span>
   </div>
   <script type="module">
+    // حماية الصفحة من الدخول المباشر بدون تسجيل دخول الأمن
+    if (!sessionStorage.getItem("securityAuth")) {
+      window.location.href = "security-auth.html";
+    }
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import {
       getFirestore,
