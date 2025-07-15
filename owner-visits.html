@@ -108,7 +108,25 @@
     if (!sessionStorage.getItem("ownerAuth")) {
       window.location.href = "owner-auth.html";
     }
-    
+
+    // --- Auto Logout Logic ---
+    let logoutTimer;
+    function resetTimer() {
+      clearTimeout(logoutTimer);
+      logoutTimer = setTimeout(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = "owner-auth.html";
+      }, 10 * 60 * 1000); // 10 دقائق
+    }
+    document.onmousemove = resetTimer;
+    document.onkeypress = resetTimer;
+    resetTimer();
+    window.addEventListener('beforeunload', function(){
+      sessionStorage.clear();
+    });
+    // --- End Auto Logout Logic ---
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import {
       getFirestore,
