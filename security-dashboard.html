@@ -147,7 +147,7 @@
 <body>
   <div class="container-card">
     <div class="main-title-3d">
-  نظام متابعة الزيارات<br>كمبوند كنز
+      نظام متابعة الزيارات<br>كمبوند كنز
     </div>
     <h2>لوحة تحكم الأمن</h2>
     <button class="btn btn-outline-primary w-100 reports-btn" onclick="window.location.href='security-history.html'"> تقارير الزيارات السابقة</button>
@@ -168,8 +168,15 @@
     <span class="logout-link" onclick="logout()">تسجيل خروج الأمن</span>
   </div>
   <script type="module">
-    // حماية الصفحة من الدخول المباشر بدون تسجيل دخول الأمن
-    if (!sessionStorage.getItem("securityAuth")) {
+    // -------------------- حماية الصفحة من الدخول المباشر --------------------
+    const securityAuth = sessionStorage.getItem("securityAuth");
+    const securityEmail = sessionStorage.getItem("securityEmail");
+    if (!securityAuth || !securityEmail) {
+      window.location.href = "security-auth.html";
+    }
+    // تأكد أن الحساب هو حساب أمن فعلاً (يمكنك تغيير الإيميل حسب ما هو مسجل لديك)
+    if (securityEmail !== "security@zowarkenz.com") {
+      sessionStorage.clear();
       window.location.href = "security-auth.html";
     }
 
@@ -284,6 +291,7 @@
 
     window.logout = function() {
       sessionStorage.removeItem("securityAuth");
+      sessionStorage.removeItem("securityEmail");
       window.location.href = "security-auth.html";
     }
 
