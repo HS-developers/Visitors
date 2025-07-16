@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -95,7 +94,7 @@
 <body>
   <div class="container-card">
     <div class="main-title-3d">
-  نظام متابعة الزيارات<br>كمبوند كنز
+      نظام متابعة الزيارات<br>كمبوند كنز
     </div>
     <h2>📄 حالة الزيارات المسجلة اليوم</h2>
     <div id="visitsContainer">
@@ -104,8 +103,15 @@
     <button class="btn btn-outline-primary w-100" onclick="window.location.href='owner-dashboard.html'">🔙 الرجوع لتسجيل زيارة جديدة</button>
   </div>
   <script type="module">
-// حماية الصفحة من الدخول المباشر بدون تسجيل دخول
-    if (!sessionStorage.getItem("ownerAuth")) {
+    // -------------------- حماية الصفحة من الدخول المباشر --------------------
+    const ownerAuth = sessionStorage.getItem("ownerAuth");
+    const ownerEmail = sessionStorage.getItem("ownerEmail");
+    if (!ownerAuth || !ownerEmail) {
+      window.location.href = "owner-auth.html";
+    }
+    // تأكد أن الحساب ليس حساب أمن
+    if (ownerEmail === "security@zowarkenz.com") {
+      sessionStorage.clear();
       window.location.href = "owner-auth.html";
     }
 
@@ -127,6 +133,7 @@
     });
     // --- End Auto Logout Logic ---
 
+    // -------------------- Firebase إعداد --------------------
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import {
       getFirestore,
@@ -148,6 +155,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // -------------------- تحميل زيارات الوحدة --------------------
     const unitNumber = localStorage.getItem("unitNumber");
     const today = new Date().toISOString().split("T")[0];
     const visitsContainer = document.getElementById("visitsContainer");
