@@ -57,16 +57,16 @@
     <div class="main-title" id="mainTitle"></div>
     <span class="logo">🏠</span>
     <h2 class="mb-3 text-center">صفحة دخول الملاك</h2>
-    <form id="loginForm" onsubmit="return false;">
-      <input type="email" id="email" class="form-control mb-2" placeholder="البريد الإلكتروني" autocomplete="username" required />
-      <input type="password" id="password" class="form-control mb-2" placeholder="كلمة السر" autocomplete="current-password" required />
+    <div class="mb-3">
+      <input type="email" id="email" class="form-control mb-2" placeholder="أدخل البريد الإلكتروني" autocomplete="off" />
+      <input type="password" id="password" class="form-control" placeholder="أدخل كلمة السر" autocomplete="off" />
       <div class="form-check mt-2 text-end">
         <input type="checkbox" id="showPass" class="form-check-input" />
         <label class="form-check-label" for="showPass">عرض كلمة السر</label>
       </div>
-      <button class="btn btn-primary w-100 mt-3" onclick="loginOwner()">دخول</button>
-      <div class="error-msg" id="errorMsg"></div>
-    </form>
+    </div>
+    <button class="btn btn-primary w-100" id="loginBtn">دخول</button>
+    <div class="error-msg" id="errorMsg"></div>
   </div>
 
   <script type="module">
@@ -74,7 +74,6 @@
     const titleText = "نظام متابعة الزيارات<br>كمبوند كنز";
     const mainTitle = document.getElementById("mainTitle");
     let i = 0;
-
     function typeWriter() {
       if (i < titleText.length) {
         mainTitle.innerHTML = titleText.slice(0, i + 1) + '<span class="type-cursor"></span>';
@@ -93,8 +92,7 @@
 
     // Firebase config
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
     const firebaseConfig = {
       apiKey: "AIzaSyBNudtJkLa0ZuXu0DO1IPLYVC-PtEdBrOE",
       authDomain: "zowar-c8626.firebaseapp.com",
@@ -103,47 +101,46 @@
       messagingSenderId: "807825141119",
       appId: "1:807825141119:web:db3b075d3f54474c3bbe4a"
     };
-
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    window.loginOwner = async function() {
-      const email = document.getElementById("email").value.trim();
+    // Login function
+    async function checkOwnerLogin() {
+      const email = document.getElementById("email").value.trim().toLowerCase();
       const password = document.getElementById("password").value;
       const errorMsg = document.getElementById("errorMsg");
-      errorMsg.style.color = "#dc3545";
       errorMsg.textContent = "";
 
       if (!email || !password) {
-        errorMsg.textContent = "يرجى إدخال البريد الإلكتروني وكلمة السر.";
+        errorMsg.textContent = "يرجى إدخال البريد وكلمة السر.";
         return;
       }
 
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        sessionStorage.setItem("ownerAuth", "true");
-        sessionStorage.setItem("ownerEmail", email);
-        window.location.href = "owner-dashboard.html";
-      } catch (error) {
-        if (error.code === "auth/user-not-found") {
-          errorMsg.textContent = "هذا البريد غير مسجل.";
-        } else if (error.code === "auth/wrong-password") {
-          errorMsg.textContent = "كلمة السر غير صحيحة.";
-        } else if (error.code === "auth/invalid-email") {
-          errorMsg.textContent = "البريد الإلكتروني غير صالح.";
-        } else {
-          errorMsg.textContent = "حدث خطأ. حاول مرة أخرى.";
-        }
+      // ابحث عن المستخدم في Firestore
+      const q = query(collection(db, "users"), where("email", "==", email));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        errorMsg.textContent = "بيانات الدخول غير صحيحة.";
+        return;
       }
-    };
+      let found = false;
+      querySnapshot.forEach(docSnap => {
+        const user = docSnap.data();
+        if (user.password === password && (!user.isAdmin || user.isAdmin === false)) {
+          found = true;
+          sessionStorage.setItem("ownerAuth", "true");
+          sessionStorage.setItem("ownerEmail", user.email);
+          window.location.href = "owner-dashboard.html";
+        }
+      });
+      if (!found) errorMsg.textContent = "بيانات الدخول غير صحيحة أو الحساب لا يخص الملاك.";
+    }
 
     // دعم زر Enter
-    document.getElementById("password").addEventListener("keydown", function(e) {
-      if (e.key === "Enter") loginOwner();
-    });
-    document.getElementById("email").addEventListener("keydown", function(e) {
-      if (e.key === "Enter") loginOwner();
-    });
+    document.getElementById("email").addEventListener("keydown", function(e) { if(e.key === "Enter") checkOwnerLogin(); });
+    document.getElementById("password").addEventListener("keydown", function(e) { if(e.key === "Enter") checkOwnerLogin(); });
+    document.getElementById("loginBtn").addEventListener("click", checkOwnerLogin);
   </script>
 </body>
 </html>
