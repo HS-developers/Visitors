@@ -89,9 +89,18 @@
   </div>
 
   <script type="module">
-    if (!sessionStorage.getItem("securityAuth")) {
-    window.location.href = "security-auth.html";
+    // -------------------- حماية الصفحة من الدخول المباشر --------------------
+    const securityAuth = sessionStorage.getItem("securityAuth");
+    const securityEmail = sessionStorage.getItem("securityEmail");
+    if (!securityAuth || !securityEmail) {
+      window.location.href = "security-auth.html";
     }
+    // تأكد أن الحساب هو حساب أمن فعلاً (يمكنك تغيير الإيميل حسب ما هو مسجل لديك)
+    if (securityEmail !== "security@zowarkenz.com") {
+      sessionStorage.clear();
+      window.location.href = "security-auth.html";
+    }
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import {
       getFirestore,
