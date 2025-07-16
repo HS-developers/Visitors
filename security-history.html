@@ -129,7 +129,7 @@
 <body>
   <div class="container-card">
     <div class="main-title-3d">
-  نظام متابعة الزيارات<br>كمبوند كنز
+      نظام متابعة الزيارات<br>كمبوند كنز
     </div>
     <h2>📊 تقارير الزيارات السابقة</h2>
     <button class="btn btn-outline-primary w-100 back-btn" onclick="window.location.href='security-dashboard.html'">⬅️ عودة للزيارات المفتوحة</button>
@@ -149,9 +149,18 @@
     </div>
   </div>
   <script type="module">
-    if (!sessionStorage.getItem("securityAuth")) {
-    window.location.href = "security-auth.html";
+    // -------------------- حماية الصفحة من الدخول المباشر --------------------
+    const securityAuth = sessionStorage.getItem("securityAuth");
+    const securityEmail = sessionStorage.getItem("securityEmail");
+    if (!securityAuth || !securityEmail) {
+      window.location.href = "security-auth.html";
     }
+    // تأكد أن الحساب هو حساب أمن فعلاً (يمكنك تغيير الإيميل حسب ما هو مسجل لديك)
+    if (securityEmail !== "security@zowarkenz.com") {
+      sessionStorage.clear();
+      window.location.href = "security-auth.html";
+    }
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import {
       getFirestore,
