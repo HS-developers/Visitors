@@ -53,46 +53,88 @@
     <span class="logo">👮‍♂️</span>
     <h2 class="mb-3 text-center">دخول الأمن فقط</h2>
     <div class="mb-3">
-      <input type="password" id="code" class="form-control" placeholder="أدخل كود الأمن" autocomplete="off" />
+      <input type="email" id="email" class="form-control mb-2" placeholder="أدخل البريد الإلكتروني" autocomplete="off" />
+      <input type="password" id="password" class="form-control" placeholder="أدخل كلمة السر" autocomplete="off" />
       <div class="form-check mt-2 text-end">
         <input type="checkbox" id="showPass" class="form-check-input" />
-        <label class="form-check-label" for="showPass">عرض الكود</label>
+        <label class="form-check-label" for="showPass">عرض كلمة السر</label>
       </div>
     </div>
-    <button class="btn btn-primary w-100" onclick="checkCode()">دخول</button>
+    <button class="btn btn-primary w-100" id="loginBtn">دخول</button>
     <div class="error-msg" id="errorMsg"></div>
   </div>
-  <script>
+  <script type="module">
     // Typewriter effect for main title
     const titleText = "نظام متابعة الزيارات<br>كمبوند كنز";
     const mainTitle = document.getElementById("mainTitle");
     let i = 0;
-
     function typeWriter() {
       if (i < titleText.length) {
         mainTitle.innerHTML = titleText.slice(0, i + 1) + '<span class="type-cursor"></span>';
         i++;
         setTimeout(typeWriter, 40);
       } else {
-        mainTitle.innerHTML = titleText; // Remove cursor at end
+        mainTitle.innerHTML = titleText;
       }
     }
     typeWriter();
 
+    // Show/hide password
     document.getElementById("showPass").addEventListener("change", function() {
-      document.getElementById("code").type = this.checked ? "text" : "password";
+      document.getElementById("password").type = this.checked ? "text" : "password";
     });
-    function checkCode() {
-      const code = document.getElementById("code").value.trim();
+
+    // Firebase config
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyBNudtJkLa0ZuXu0DO1IPLYVC-PtEdBrOE",
+      authDomain: "zowar-c8626.firebaseapp.com",
+      projectId: "zowar-c8626",
+      storageBucket: "zowar-c8626.appspot.com",
+      messagingSenderId: "807825141119",
+      appId: "1:807825141119:web:db3b075d3f54474c3bbe4a"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Login function
+    async function checkSecurityLogin() {
+      const email = document.getElementById("email").value.trim().toLowerCase();
+      const password = document.getElementById("password").value;
       const errorMsg = document.getElementById("errorMsg");
-      // يفضل تخزين كود الأمن في قاعدة البيانات وليس ثابت هنا!
-      if (code === "4321") {
-        sessionStorage.setItem("securityAuth", "true");
-        window.location.href = "security-dashboard.html";
-      } else {
-        errorMsg.textContent = "كود غير صحيح، حاول مرة أخرى";
+      errorMsg.textContent = "";
+
+      if (!email || !password) {
+        errorMsg.textContent = "يرجى إدخال البريد وكلمة السر.";
+        return;
       }
+
+      // ابحث عن المستخدم في Firestore
+      const q = query(collection(db, "users"), where("email", "==", email));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        errorMsg.textContent = "بيانات الدخول غير صحيحة.";
+        return;
+      }
+      let found = false;
+      querySnapshot.forEach(docSnap => {
+        const user = docSnap.data();
+        if (user.password === password && user.isAdmin === true) {
+          found = true;
+          sessionStorage.setItem("securityAuth", "true");
+          sessionStorage.setItem("securityEmail", user.email);
+          window.location.href = "security-dashboard.html";
+        }
+      });
+      if (!found) errorMsg.textContent = "بيانات الدخول غير صحيحة أو الحساب لا يخص الأمن.";
     }
+
+    // دعم زر Enter
+    document.getElementById("email").addEventListener("keydown", function(e) { if(e.key === "Enter") checkSecurityLogin(); });
+    document.getElementById("password").addEventListener("keydown", function(e) { if(e.key === "Enter") checkSecurityLogin(); });
+    document.getElementById("loginBtn").addEventListener("click", checkSecurityLogin);
   </script>
 </body>
 </html>
