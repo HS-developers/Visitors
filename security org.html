@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>استعلام عن الزوار</title>
   <script type="module">
+    // -------------------- حماية الصفحة من الدخول المباشر --------------------
+    const securityAuth = sessionStorage.getItem("securityAuth");
+    const securityEmail = sessionStorage.getItem("securityEmail");
+    if (!securityAuth || !securityEmail) {
+      window.location.href = "security-auth.html";
+    }
+    // تأكد أن الحساب هو حساب أمن فعلاً (يمكنك تغيير الإيميل حسب ما هو مسجل لديك)
+    if (securityEmail !== "security@zowarkenz.com") {
+      sessionStorage.clear();
+      window.location.href = "security-auth.html";
+    }
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
       getFirestore, collection, query, where, getDocs, orderBy, doc, updateDoc
