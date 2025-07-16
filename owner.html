@@ -81,6 +81,37 @@
   </div>
 
   <script type="module">
+    // -------------------- حماية الصفحة من الدخول المباشر --------------------
+    const ownerAuth = sessionStorage.getItem("ownerAuth");
+    const ownerEmail = sessionStorage.getItem("ownerEmail");
+    if (!ownerAuth || !ownerEmail) {
+      alert("غير مصرح لك بالدخول!");
+      window.location.href = "owner-auth.html";
+    }
+    // تأكد أن الحساب ليس حساب أمن
+    if (ownerEmail === "security@zowarkenz.com") {
+      sessionStorage.clear();
+      window.location.href = "owner-auth.html";
+    }
+
+    // --- Auto Logout Logic ---
+    let logoutTimer;
+    function resetTimer() {
+      clearTimeout(logoutTimer);
+      logoutTimer = setTimeout(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = "owner-auth.html";
+      }, 10 * 60 * 1000); // 10 دقائق
+    }
+    document.onmousemove = resetTimer;
+    document.onkeypress = resetTimer;
+    resetTimer();
+    window.addEventListener('beforeunload', function(){
+      sessionStorage.clear();
+    });
+
+    // -------------------- Firebase إعداد --------------------
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
@@ -111,7 +142,7 @@
       }
     }
 
-    function saveOwnerInfo() {
+    window.saveOwnerInfo = function() {
       const ownerName = document.getElementById("ownerName").value.trim();
       const unitNumber = document.getElementById("unitNumber").value.trim();
 
@@ -126,7 +157,7 @@
       location.reload();
     }
 
-    async function submitVisit() {
+    window.submitVisit = async function() {
       const visitorName = document.getElementById("visitorName").value.trim();
       const carNumber = document.getElementById("carNumber").value.trim();
       const ownerName = localStorage.getItem("ownerName");
@@ -152,14 +183,6 @@
       alert("تم تسجيل الزيارة بنجاح");
       document.getElementById("visitorName").value = "";
       document.getElementById("carNumber").value = "";
-    }
-
-    window.saveOwnerInfo = saveOwnerInfo;
-    window.submitVisit = submitVisit;
-
-    if (sessionStorage.getItem("ownerAuth") !== "true") {
-      alert("غير مصرح لك بالدخول!");
-      window.location.href = "owner-auth.html";
     }
   </script>
 </body>
