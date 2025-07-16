@@ -103,7 +103,7 @@
 <body>
   <div class="container-card">
     <div class="main-title-3d">
-  نظام متابعة الزيارات<br>كمبوند كنز
+      نظام متابعة الزيارات<br>كمبوند كنز
     </div>
     <h2 class="mb-3 text-center text-primary">لوحة تحكم المالك</h2>
     <div id="ownerFormContainer" style="display: none;">
@@ -137,12 +137,20 @@
     </div>
   </div>
   <script type="module">
-// حماية الصفحة من الدخول المباشر بدون تسجيل دخول
-    if (!sessionStorage.getItem("ownerAuth")) {
+    // -------------------- حماية الصفحة من الدخول المباشر --------------------
+    // يجب أن يكون المستخدم قد سجل الدخول كمالك فقط (وليس أمن)
+    const ownerAuth = sessionStorage.getItem("ownerAuth");
+    const ownerEmail = sessionStorage.getItem("ownerEmail");
+    if (!ownerAuth || !ownerEmail) {
+      window.location.href = "owner-auth.html";
+    }
+    // تحقق أن الحساب ليس حساب أمن (يفضل أن يكون لديك إيميل أمن ثابت)
+    if (ownerEmail === "security@zowarkenz.com") {
+      sessionStorage.clear();
       window.location.href = "owner-auth.html";
     }
 
-    // --- Auto Logout Logic ---
+    // -------------------- Auto Logout (تسجيل خروج تلقائي بعد 10 دقائق) --------------------
     let logoutTimer;
     function resetTimer() {
       clearTimeout(logoutTimer);
@@ -158,8 +166,8 @@
     window.addEventListener('beforeunload', function(){
       sessionStorage.clear();
     });
-    // --- End Auto Logout Logic ---
 
+    // -------------------- Firebase إعداد --------------------
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import {
       getFirestore,
@@ -183,6 +191,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // -------------------- تحميل بيانات المالك (من LocalStorage) --------------------
     const ownerName = localStorage.getItem("ownerName");
     const unitNumber = localStorage.getItem("unitNumber");
     const phone = localStorage.getItem("phone");
@@ -190,6 +199,7 @@
     const ownerForm = document.getElementById("ownerFormContainer");
     const mainForm = document.getElementById("mainForm");
 
+    // إذا لم تكن بيانات المالك محفوظة، أظهر النموذج لإدخالها
     if (!ownerName || !unitNumber || !phone) {
       ownerForm.style.display = "block";
     } else {
@@ -200,9 +210,9 @@
       startListeningForConfirmations(unitNumber);
     }
 
+    // -------------------- حفظ بيانات المالك --------------------
     window.saveOwnerInfo = function () {
       const name = document.getElementById("ownerNameInput").value.trim();
-      // تعديل: تنظيف رقم الوحدة من المسافات وجعلها كابيتال
       const unit = document.getElementById("unitNumberInput").value.trim().replace(/\s+/g, '').toUpperCase();
       const phone = document.getElementById("phoneInput").value.trim();
 
@@ -225,6 +235,7 @@
       startListeningForConfirmations(unit);
     };
 
+    // -------------------- تسجيل زيارة زائر --------------------
     window.submitVisit = async function () {
       const visitorName = document.getElementById("visitorName").value.trim();
       const carNumber = document.getElementById("carNumber").value.trim();
@@ -240,7 +251,7 @@
         visitorName,
         carNumber,
         ownerName: localStorage.getItem("ownerName"),
-        unitNumber: localStorage.getItem("unitNumber"), // مخزنة بالفعل بشكل صحيح
+        unitNumber: localStorage.getItem("unitNumber"),
         phone: localStorage.getItem("phone"),
         entered: false,
         date: today,
@@ -254,11 +265,13 @@
       sessionStorage.setItem("soundAllowed", "true");
     };
 
+    // -------------------- الانتقال لصفحة عرض الزيارات --------------------
     window.goToVisitsPage = function () {
       sessionStorage.setItem("soundAllowed", "false");
       window.location.href = "owner-visits.html";
     };
 
+    // -------------------- الاستماع لتأكيد دخول الزائر --------------------
     function startListeningForConfirmations(unitNumber) {
       const today = new Date().toISOString().split("T")[0];
       const q = query(collection(db, "visits"),
@@ -291,11 +304,13 @@
       });
     }
 
+    // -------------------- تسجيل الخروج --------------------
     window.logout = function() {
       localStorage.removeItem("ownerName");
       localStorage.removeItem("unitNumber");
       localStorage.removeItem("phone");
       sessionStorage.removeItem("ownerAuth");
+      sessionStorage.removeItem("ownerEmail");
       window.location.href = "owner-auth.html";
     }
   </script>
