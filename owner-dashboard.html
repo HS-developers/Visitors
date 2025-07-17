@@ -305,7 +305,7 @@
     // تسجيل الخروج
     document.getElementById("logoutBtn").onclick = async function() {
       await signOut(auth);
-      window.location.href = "owner-auth.html";
+      window.location.href = "index.html";
     }
 
     // تسجيل خروج تلقائي بعد 10 دقائق من عدم النشاط
@@ -314,7 +314,7 @@
       clearTimeout(logoutTimer);
       logoutTimer = setTimeout(async () => {
         await signOut(auth);
-        window.location.href = "owner-auth.html";
+        window.location.href = "index.html";
       }, 10 * 60 * 1000); // 10 دقائق
     }
     document.onmousemove = resetTimer;
