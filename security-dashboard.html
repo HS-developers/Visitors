@@ -12,6 +12,8 @@
       background: #e9f2fb;
       min-height: 100vh;
       padding: 15px;
+      position: relative;
+      padding-bottom: 70px;
     }
     .container-card {
       max-width: 650px;
@@ -138,9 +140,28 @@
       font-weight: bold;
       letter-spacing: 1px;
     }
+    footer {
+      position: fixed;
+      right: 0;
+      left: 0;
+      bottom: 0;
+      background: #f1f1f1;
+      padding: 15px 0 7px 0;
+      text-align: center;
+      border-top: 1px solid #e0e0e0;
+      z-index: 100;
+    }
+    footer .copyright {
+      color: #666;
+      font-size: 1rem;
+      font-family: 'Cairo', sans-serif;
+      letter-spacing: 1px;
+    }
     @media (max-width: 600px) {
       .owner-card { flex-direction: column; align-items: flex-start; gap: 7px; }
       .owner-avatar { margin-inline-end: 0; margin-bottom: 7px; }
+      body { padding-bottom: 90px;}
+      footer { font-size: 0.95em; }
     }
   </style>
 </head>
@@ -149,14 +170,14 @@
     <div class="main-title-3d">
       نظام متابعة الزيارات<br>كمبوند كنز
     </div>
-    <h2>لوحة تحكم الأمن</h2>
-    <button class="btn btn-outline-primary w-100 reports-btn" onclick="window.location.href='security-history.html'"> تقارير الزيارات السابقة</button>
+    <h2> لوحة تحكم الأمن</h2>
+    <button class="btn btn-outline-primary w-100 reports-btn" onclick="window.location.href='security-history.html'">📊 تقارير الزيارات السابقة</button>
     <form class="search-form row gy-2 gx-2 align-items-center" id="searchForm" onsubmit="return false;">
       <div class="col-12 col-md-4">
         <input type="date" id="dateInput" class="form-control" />
       </div>
       <div class="col-12 col-md-4">
-        <input type="text" id="unitInput" class="form-control" placeholder="رقم الوحدة" />
+        <input type="text" id="unitInput" class="form-control" placeholder="رقم الوحدة " />
       </div>
       <div class="col-12 col-md-4 d-grid">
         <button type="button" class="btn btn-primary" onclick="loadVisits()">بحث</button>
@@ -167,19 +188,12 @@
     </div>
     <span class="logout-link" onclick="logout()">تسجيل خروج الأمن</span>
   </div>
+  <footer>
+    <div class="copyright">
+      Copyright © 2025 "GENIUS Tech" All Rights Reserved
+    </div>
+  </footer>
   <script type="module">
-    // -------------------- حماية الصفحة من الدخول المباشر --------------------
-    const securityAuth = sessionStorage.getItem("securityAuth");
-    const securityEmail = sessionStorage.getItem("securityEmail");
-    if (!securityAuth || !securityEmail) {
-      window.location.href = "security-auth.html";
-    }
-    // تأكد أن الحساب هو حساب أمن فعلاً (يمكنك تغيير الإيميل حسب ما هو مسجل لديك)
-    if (securityEmail !== "security@zowarkenz.com") {
-      sessionStorage.clear();
-      window.location.href = "security-auth.html";
-    }
-
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import {
       getFirestore,
@@ -291,12 +305,12 @@
 
     window.logout = function() {
       sessionStorage.removeItem("securityAuth");
-      sessionStorage.removeItem("securityEmail");
       window.location.href = "security-auth.html";
     }
 
     document.getElementById("dateInput").value = new Date().toISOString().split("T")[0];
     loadVisits();
+    setInterval(loadVisits, 60000); // تحديث تلقائي كل دقيقة (60 ثانية)
   </script>
 </body>
 </html>
