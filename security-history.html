@@ -12,6 +12,8 @@
       background: #f6fafd;
       min-height: 100vh;
       padding: 15px;
+      position: relative;
+      padding-bottom: 70px;
     }
     .container-card {
       max-width: 700px;
@@ -120,9 +122,28 @@
       font-size: 1.07rem;
       font-weight: bold;
     }
+    footer {
+      position: fixed;
+      right: 0;
+      left: 0;
+      bottom: 0;
+      background: #f1f1f1;
+      padding: 15px 0 7px 0;
+      text-align: center;
+      border-top: 1px solid #e0e0e0;
+      z-index: 100;
+    }
+    footer .copyright {
+      color: #666;
+      font-size: 1rem;
+      font-family: 'Cairo', sans-serif;
+      letter-spacing: 1px;
+    }
     @media (max-width: 600px) {
       .owner-card { flex-direction: column; align-items: flex-start; gap: 7px; }
       .owner-avatar { margin-inline-end: 0; margin-bottom: 7px; }
+      body { padding-bottom: 90px; }
+      footer { font-size: 0.95em; }
     }
   </style>
 </head>
@@ -148,6 +169,11 @@
       <div class="text-center text-muted">يرجى اختيار تاريخ لعرض التقارير.</div>
     </div>
   </div>
+  <footer>
+    <div class="copyright">
+      Copyright © 2025 "GENIUS Tech" All Rights Reserved
+    </div>
+  </footer>
   <script type="module">
     // -------------------- حماية الصفحة من الدخول المباشر --------------------
     const securityAuth = sessionStorage.getItem("securityAuth");
