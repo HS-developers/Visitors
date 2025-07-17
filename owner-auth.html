@@ -164,6 +164,15 @@
 
         if (!querySnapshot.empty) {
           const userDoc = querySnapshot.docs[0];
+          const userData = userDoc.data();
+
+          if (userData.isAdmin === true) {
+            // الحساب خاص بالأمن
+            errorMsg.textContent = "هذا الحساب مخصص للأمن ولا يمكن تسجيل الدخول هنا.";
+            return;
+          }
+
+          // فقط حسابات الملاك
           sessionStorage.setItem("ownerPreUid", userDoc.id);
           successMsg.textContent = "تم تسجيل الدخول بنجاح، جاري التحويل...";
           setTimeout(() => {
