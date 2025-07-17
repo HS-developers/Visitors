@@ -7,7 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f8f9fa; }
+    body { font-family: 'Cairo', sans-serif; background: #f8f9fa; min-height: 100vh; position: relative; padding-bottom: 64px; }
     .auth-card { max-width: 370px; margin: 70px auto; background: #fff; border-radius: 14px; box-shadow: 0 3px 14px #0001; padding: 34px 28px 24px; }
     .form-control { font-size: 1.1rem; }
     .error-msg { color: #dc3545; margin-top: 10px; min-height:1.3em;}
@@ -50,6 +50,35 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0; }
     }
+    .success-msg {
+      color: #1b8a00;
+      margin-top: 10px;
+      min-height: 1.3em;
+      font-weight: bold;
+    }
+    /* --- ثابت أسفل الصفحة --- */
+    footer {
+      position: fixed;
+      right: 0;
+      left: 0;
+      bottom: 0;
+      background: #f1f1f1;
+      padding: 15px 0 7px 0;
+      text-align: center;
+      border-top: 1px solid #e0e0e0;
+      z-index: 100;
+    }
+    footer .copyright {
+      color: #666;
+      font-size: 1rem;
+      font-family: 'Cairo', sans-serif;
+      letter-spacing: 1px;
+    }
+    @media (max-width:600px) {
+      .auth-card {margin: 30px auto;}
+      body { padding-bottom: 80px; }
+      footer { font-size: 0.95em; }
+    }
   </style>
 </head>
 <body>
@@ -67,7 +96,14 @@
     </div>
     <button class="btn btn-primary w-100" id="loginBtn">دخول</button>
     <div class="error-msg" id="errorMsg"></div>
+    <div class="success-msg" id="successMsg"></div>
   </div>
+
+  <footer>
+    <div class="copyright">
+      Copyright © 2025 "GENIUS Tech" All Rights Reserved
+    </div>
+  </footer>
 
   <script type="module">
     // Typewriter effect for main title
@@ -90,7 +126,7 @@
       document.getElementById("password").type = this.checked ? "text" : "password";
     });
 
-    // Firebase config
+    // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
     const firebaseConfig = {
@@ -104,40 +140,43 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Login function
+    // Login function (Firestore users collection)
     async function checkOwnerLogin() {
-      const email = document.getElementById("email").value.trim().toLowerCase();
-      const password = document.getElementById("password").value;
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
       const errorMsg = document.getElementById("errorMsg");
+      const successMsg = document.getElementById("successMsg");
       errorMsg.textContent = "";
+      successMsg.textContent = "";
 
       if (!email || !password) {
         errorMsg.textContent = "يرجى إدخال البريد وكلمة السر.";
         return;
       }
 
-      // ابحث عن المستخدم في Firestore
-      const q = query(collection(db, "users"), where("email", "==", email));
-      const querySnapshot = await getDocs(q);
+      try {
+        const q = query(
+          collection(db, "users"),
+          where("email", "==", email),
+          where("password", "==", password)
+        );
+        const querySnapshot = await getDocs(q);
 
-      if (querySnapshot.empty) {
-        errorMsg.textContent = "بيانات الدخول غير صحيحة.";
-        return;
-      }
-      let found = false;
-      querySnapshot.forEach(docSnap => {
-        const user = docSnap.data();
-        if (user.password === password && (!user.isAdmin || user.isAdmin === false)) {
-          found = true;
-          sessionStorage.setItem("ownerAuth", "true");
-          sessionStorage.setItem("ownerEmail", user.email);
-          window.location.href = "owner-dashboard.html";
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          sessionStorage.setItem("ownerPreUid", userDoc.id);
+          successMsg.textContent = "تم تسجيل الدخول بنجاح، جاري التحويل...";
+          setTimeout(() => {
+            window.location.href = "owner-create-account.html";
+          }, 1000);
+        } else {
+          errorMsg.textContent = "بيانات الدخول غير صحيحة أو غير مسجلة.";
         }
-      });
-      if (!found) errorMsg.textContent = "بيانات الدخول غير صحيحة أو الحساب لا يخص الملاك.";
+      } catch (err) {
+        errorMsg.textContent = "حدث خطأ: " + err.message;
+      }
     }
 
-    // دعم زر Enter
     document.getElementById("email").addEventListener("keydown", function(e) { if(e.key === "Enter") checkOwnerLogin(); });
     document.getElementById("password").addEventListener("keydown", function(e) { if(e.key === "Enter") checkOwnerLogin(); });
     document.getElementById("loginBtn").addEventListener("click", checkOwnerLogin);
