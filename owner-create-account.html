@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>إنشاء حساب مالك جديد</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Cairo', sans-serif; background: #f8f9fa; min-height: 100vh; position: relative; padding-bottom: 64px;}
+    .auth-card { max-width: 370px; margin: 70px auto; background: #fff; border-radius: 14px; box-shadow: 0 3px 14px #0001; padding: 34px 28px 24px; }
+    .form-control { font-size: 1.1rem; }
+    .error-msg { color: #dc3545; margin-top: 10px; min-height:1.3em;}
+    .success-msg { color: #28a745; margin-top: 10px; min-height:1.3em;}
+    .main-title {
+      font-size: 1.18rem;
+      font-weight: bold;
+      margin-bottom: 14px;
+      letter-spacing: 1.5px;
+      text-align: center;
+      color: #007bff;
+      text-shadow:
+        0 2px 8px #007bff22,
+        0 1px 0 #fff,
+        0 4px 12px #007bff07;
+      padding-top: 2px;
+      padding-bottom: 2px;
+      user-select: none;
+      direction: rtl;
+      min-height: 2.5em;
+    }
+    .logo {
+      display: block;
+      margin: 0 auto 18px auto;
+      font-size: 2.4rem;
+      text-align: center;
+      filter: drop-shadow(0 3px 8px #007bff22);
+    }
+    /* --- ثابت أسفل الصفحة --- */
+    footer {
+      position: fixed;
+      right: 0;
+      left: 0;
+      bottom: 0;
+      background: #f1f1f1;
+      padding: 15px 0 7px 0;
+      text-align: center;
+      border-top: 1px solid #e0e0e0;
+      z-index: 100;
+    }
+    footer .copyright {
+      color: #666;
+      font-size: 1rem;
+      font-family: 'Cairo', sans-serif;
+      letter-spacing: 1px;
+    }
+    @media (max-width:600px) {
+      .auth-card {margin: 30px auto;}
+      body { padding-bottom: 80px; }
+      footer { font-size: 0.95em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-card">
+    <div class="main-title">إنشاء حساب مالك جديد</div>
+    <span class="logo">🔑</span>
+    <form id="signUpForm" autocomplete="off">
+      <input type="email" id="signupEmail" class="form-control mb-2" placeholder="البريد الإلكتروني الجديد" required />
+      <input type="password" id="signupPassword" class="form-control mb-2" placeholder="كلمة السر الجديدة (6 أحرف على الأقل)" required minlength="6" />
+      <input type="text" id="ownerName" class="form-control mb-2" placeholder="اسم المالك" required />
+      <input type="text" id="unitNumber" class="form-control mb-2" placeholder="رقم الوحدة" required />
+      <input type="text" id="phoneNumber" class="form-control mb-2" placeholder="تليفون المالك" required />
+      <button type="submit" class="btn btn-primary w-100">تسجيل الحساب</button>
+      <div class="error-msg" id="errorMsg"></div>
+      <div class="success-msg" id="successMsg"></div>
+    </form>
+  </div>
+  <footer>
+    <div class="copyright">
+      Copyright © 2025 "GENIUS Tech" All Rights Reserved
+    </div>
+  </footer>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import {
+      getFirestore,
+      setDoc,
+      doc
+    } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBNudtJkLa0ZuXu0DO1IPLYVC-PtEdBrOE",
+      authDomain: "zowar-c8626.firebaseapp.com",
+      projectId: "zowar-c8626",
+      storageBucket: "zowar-c8626.appspot.com",
+      messagingSenderId: "807825141119",
+      appId: "1:807825141119:web:db3b075d3f54474c3bbe4a"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const signUpForm = document.getElementById('signUpForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const successMsg = document.getElementById('successMsg');
+
+    signUpForm.onsubmit = async function(e) {
+      e.preventDefault();
+      errorMsg.textContent = "";
+      successMsg.textContent = "";
+      const email = document.getElementById('signupEmail').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      const ownerName = document.getElementById('ownerName').value.trim();
+      const unitNumber = document.getElementById('unitNumber').value.trim().toUpperCase();
+      const phoneNumber = document.getElementById('phoneNumber').value.trim();
+
+      if (!email || !password || !ownerName || !unitNumber || !phoneNumber) {
+        errorMsg.textContent = "يرجى ملء جميع الحقول.";
+        return;
+      }
+      try {
+        // إنشاء حساب جديد للمستخدم
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        // حفظ بيانات المالك الإضافية في Firestore
+        await setDoc(doc(db, "owners", user.uid), {
+          email,
+          ownerName,
+          unitNumber,
+          phoneNumber,
+          createdAt: new Date().toISOString()
+        });
+        successMsg.textContent = "تم إنشاء الحساب بنجاح! سيتم تحويلك...";
+        setTimeout(() => {
+          window.location.href = "owner-dashboard.html";
+        }, 1200);
+      } catch (err) {
+        if (err.code === "auth/email-already-in-use") {
+          errorMsg.textContent = "هذا البريد مستخدم بالفعل.";
+        } else if (err.code === "auth/weak-password") {
+          errorMsg.textContent = "كلمة السر ضعيفة (يجب أن تكون 6 أحرف على الأقل).";
+        } else {
+          errorMsg.textContent = err.message;
+        }
+      }
+    };
+  </script>
+</body>
+</html>
