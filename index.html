@@ -44,17 +44,181 @@
       box-shadow: 0 2px 12px #007bff15;
       background: #113cca;
     }
+    /* Modal Styles */
+    .custom-modal-bg {
+      position: fixed;
+      inset: 0;
+      background: #0004;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .custom-modal {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 340px;
+      width: 98vw;
+      box-shadow: 0 3px 24px #0002;
+      padding: 25px 20px 20px 20px;
+      position: relative;
+      animation: appear .3s;
+    }
+    @keyframes appear {
+      from {transform: scale(0.95) translateY(30px); opacity: 0;}
+      to {transform: scale(1) translateY(0); opacity: 1;}
+    }
+    .modal-close {
+      position: absolute;
+      left: 16px;
+      top: 12px;
+      width: 30px;
+      height: 30px;
+      background: #eee;
+      border-radius: 50%;
+      text-align: center;
+      font-size: 1.2em;
+      color: #777;
+      cursor: pointer;
+      border: none;
+      line-height: 30px;
+      transition: background .2s;
+    }
+    .modal-close:hover {
+      background: #ffdddd;
+      color: #b00;
+    }
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 13px;
+      color: #007bff;
+      letter-spacing: .5px;
+    }
+    .modal-error {
+      color: #dc3545;
+      min-height: 1.5em;
+      text-align: center;
+      margin-bottom: 4px;
+      font-size: 1em;
+    }
+    .modal-success {
+      color: #178a3e;
+      min-height: 1.5em;
+      text-align: center;
+      margin-bottom: 4px;
+      font-size: 1em;
+    }
   </style>
 </head>
 <body>
+<script>
+console.log("ownerHasAccount_v1 in localStorage:", localStorage.getItem("ownerHasAccount_v1"));
+</script>
+
   <div class="main-card text-center">
     <img class="logo-img" src="kenz.jpg" alt="شعار كمبوند كنز">
     <h1>مرحباً بك في تطبيق زوار<br>كمبوند كنز</h1>
     <p class="mb-4 text-muted">اختر نوع الدخول:</p>
     <div class="d-grid gap-3">
-      <a href="owner-auth.html" class="btn btn-primary btn-lg">صفحة المالك</a>
+      <button id="ownerBtn" class="btn btn-primary btn-lg">صفحة المالك</button>
       <a href="security-auth.html" class="btn btn-outline-secondary btn-lg">صفحة الأمن</a>
     </div>
   </div>
+
+  <!-- نافذة تسجيل دخول المالك الجديد -->
+  <div id="ownerLoginModalBg" class="custom-modal-bg" style="display:none;">
+    <div class="custom-modal">
+      <button type="button" class="modal-close" id="closeOwnerLoginModal" title="إغلاق">×</button>
+      <div class="modal-title">تسجيل دخول المالك</div>
+      <form id="ownerLoginForm" autocomplete="off">
+        <input type="email" id="modalOwnerEmail" name="modalOwnerEmailX" class="form-control mb-2" placeholder="البريد الإلكتروني للمالك" required autocomplete="off">
+        <input type="password" id="modalOwnerPassword" name="modalOwnerPasswordX" class="form-control mb-2" placeholder="كلمة السر" required autocomplete="current-password">
+        <button type="submit" class="btn btn-success w-100 mt-1 mb-2">دخول المالك</button>
+        <div class="modal-error" id="modalOwnerLoginError"></div>
+        <div class="modal-success" id="modalOwnerLoginSuccess"></div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBNudtJkLa0ZuXu0DO1IPLYVC-PtEdBrOE",
+      authDomain: "zowar-c8626.firebaseapp.com",
+      projectId: "zowar-c8626",
+      storageBucket: "zowar-c8626.appspot.com",
+      messagingSenderId: "807825141119",
+      appId: "1:807825141119:web:db3b075d3f54474c3bbe4a"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById("ownerBtn").onclick = function() {
+      const ownerHasAccount = localStorage.getItem("ownerHasAccount_v1");
+      if (ownerHasAccount === "yes") {
+        // تحقق بشكل متزامن من جلسة المستخدم الحالي
+        const user = auth.currentUser;
+        if (user) {
+          window.location.href = "owner-dashboard.html";
+        } else {
+          // افتح نافذة تسجيل دخول المالك الجديدة
+          document.getElementById("ownerLoginModalBg").style.display = "flex";
+          document.getElementById("modalOwnerEmail").focus();
+        }
+      } else {
+        window.location.href = "owner-auth.html";
+      }
+    };
+
+    // إغلاق نافذة المالك
+    document.getElementById("closeOwnerLoginModal").onclick = function() {
+      document.getElementById("ownerLoginModalBg").style.display = "none";
+      document.getElementById("modalOwnerLoginError").textContent = "";
+      document.getElementById("modalOwnerLoginSuccess").textContent = "";
+      document.getElementById("ownerLoginForm").reset();
+    };
+
+    // عند إرسال نموذج تسجيل دخول المالك الجديد
+    document.getElementById("ownerLoginForm").onsubmit = async function(e) {
+      e.preventDefault();
+      const email = document.getElementById("modalOwnerEmail").value.trim();
+      const password = document.getElementById("modalOwnerPassword").value;
+      const errorDiv = document.getElementById("modalOwnerLoginError");
+      const successDiv = document.getElementById("modalOwnerLoginSuccess");
+      errorDiv.textContent = "";
+      successDiv.textContent = "";
+
+      if (!email || !password) {
+        errorDiv.textContent = "يرجى إدخال البريد وكلمة السر.";
+        return;
+      }
+
+      try {
+        // محاولة تسجيل الدخول عبر Firebase Auth
+        await signInWithEmailAndPassword(auth, email, password);
+        // حفظ مؤشر أن هذا الجهاز أصبح به مالك مسجل (للمرات القادمة)
+        localStorage.setItem("ownerHasAccount_v1", "yes");
+        successDiv.textContent = "تم تسجيل الدخول بنجاح، جاري التحويل...";
+        setTimeout(() => {
+          window.location.href = "owner-dashboard.html";
+        }, 800);
+      } catch (err) {
+        if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
+          errorDiv.textContent = "البريد أو كلمة السر غير صحيحة.";
+        } else {
+          errorDiv.textContent = err.message;
+        }
+      }
+    };
+
+    // عند تسجيل الخروج في owner-dashboard.html يجب حذف localStorage.removeItem("ownerHasAccount_v1");
+  </script>
 </body>
 </html>
