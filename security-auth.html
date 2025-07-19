@@ -12,14 +12,13 @@
     .form-control { font-size: 1.1rem; }
     .error-msg { color: #dc3545; margin-top: 10px; }
     .logo { font-size: 2.2rem; color: #007bff; margin-bottom: 12px; display: block; text-align: center; }
-    /* Typewriter title styles */
     .main-title {
       font-size: 1.35rem;
       font-weight: bold;
       margin-bottom: 14px;
       letter-spacing: 1.5px;
       text-align: center;
-      color: #b30000; /* أحمر قاني */
+      color: #b30000;
       text-shadow:
         0 2px 8px #b3000050,
         0 1px 0 #fff,
@@ -91,7 +90,7 @@
     </div>
   </footer>
   <script type="module">
-    // Typewriter effect for main title
+    // Typewriter effect
     const titleText = "نظام متابعة الزيارات<br>كمبوند كنز";
     const mainTitle = document.getElementById("mainTitle");
     let i = 0;
@@ -106,14 +105,14 @@
     }
     typeWriter();
 
-    // Show/hide password
     document.getElementById("showPass").addEventListener("change", function() {
       document.getElementById("password").type = this.checked ? "text" : "password";
     });
 
-    // Firebase config
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyBNudtJkLa0ZuXu0DO1IPLYVC-PtEdBrOE",
       authDomain: "zowar-c8626.firebaseapp.com",
@@ -123,9 +122,9 @@
       appId: "1:807825141119:web:db3b075d3f54474c3bbe4a"
     };
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Login function
     async function checkSecurityLogin() {
       const email = document.getElementById("email").value.trim().toLowerCase();
       const password = document.getElementById("password").value;
@@ -137,28 +136,23 @@
         return;
       }
 
-      // ابحث عن المستخدم في Firestore
-      const q = query(collection(db, "users"), where("email", "==", email));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        errorMsg.textContent = "بيانات الدخول غير صحيحة.";
-        return;
-      }
-      let found = false;
-      querySnapshot.forEach(docSnap => {
-        const user = docSnap.data();
-        if (user.password === password && user.isAdmin === true) {
-          found = true;
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const uid = userCredential.user.uid;
+        // تحقق أن الحساب هو أمن فعلاً (من Firestore)
+        const userDoc = await getDoc(doc(db, "users", uid));
+        if (userDoc.exists() && userDoc.data().isAdmin === true) {
           sessionStorage.setItem("securityAuth", "true");
-          sessionStorage.setItem("securityEmail", user.email);
+          sessionStorage.setItem("securityEmail", email);
           window.location.href = "security-dashboard.html";
+        } else {
+          errorMsg.textContent = "هذا الحساب ليس حساب أمن.";
         }
-      });
-      if (!found) errorMsg.textContent = "بيانات الدخول غير صحيحة أو الحساب لا يخص الأمن.";
+      } catch (err) {
+        errorMsg.textContent = "بيانات الدخول غير صحيحة.";
+      }
     }
 
-    // دعم زر Enter
     document.getElementById("email").addEventListener("keydown", function(e) { if(e.key === "Enter") checkSecurityLogin(); });
     document.getElementById("password").addEventListener("keydown", function(e) { if(e.key === "Enter") checkSecurityLogin(); });
     document.getElementById("loginBtn").addEventListener("click", checkSecurityLogin);
