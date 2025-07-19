@@ -194,6 +194,7 @@
     </div>
   </footer>
   <script type="module">
+    // إضافة تحقق من تسجيل الدخول عبر Firebase Auth وليس فقط sessionStorage
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import {
       getFirestore,
@@ -204,6 +205,11 @@
       doc,
       getDocs
     } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBNudtJkLa0ZuXu0DO1IPLYVC-PtEdBrOE",
@@ -216,6 +222,22 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // حماية الصفحة من الدخول غير المسجل
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        // لم يتم تسجيل دخول المستخدم، إعادة التوجيه لصفحة تسجيل الدخول
+        window.location.href = "security-auth.html";
+      } else {
+        // يمكن هنا إضافة تحقق إضافي من isAdmin في قاعدة البيانات (اختياري)
+        // const userDoc = await getDoc(doc(db, "users", user.uid));
+        // if (!userDoc.exists() || !userDoc.data().isAdmin) {
+        //   signOut(auth);
+        //   window.location.href = "security-auth.html";
+        // }
+      }
+    });
 
     window.loadVisits = async function () {
       const date = document.getElementById("dateInput").value;
@@ -304,8 +326,11 @@
     }
 
     window.logout = function() {
-      sessionStorage.removeItem("securityAuth");
-      window.location.href = "security-auth.html";
+      // تسجيل خروج من Firebase Auth
+      signOut(auth).then(() => {
+        sessionStorage.removeItem("securityAuth");
+        window.location.href = "security-auth.html";
+      });
     }
 
     document.getElementById("dateInput").value = new Date().toISOString().split("T")[0];
