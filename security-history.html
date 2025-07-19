@@ -175,18 +175,7 @@
     </div>
   </footer>
   <script type="module">
-    // -------------------- حماية الصفحة من الدخول المباشر --------------------
-    const securityAuth = sessionStorage.getItem("securityAuth");
-    const securityEmail = sessionStorage.getItem("securityEmail");
-    if (!securityAuth || !securityEmail) {
-      window.location.href = "security-auth.html";
-    }
-    // تأكد أن الحساب هو حساب أمن فعلاً (يمكنك تغيير الإيميل حسب ما هو مسجل لديك)
-    if (securityEmail !== "letmein@zowarkenz.com") {
-      sessionStorage.clear();
-      window.location.href = "security-auth.html";
-    }
-
+    // حماية الصفحة من الدخول غير المسجل
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import {
       getFirestore,
@@ -195,6 +184,11 @@
       where,
       getDocs
     } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBNudtJkLa0ZuXu0DO1IPLYVC-PtEdBrOE",
@@ -207,6 +201,13 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "security-auth.html";
+      }
+    });
 
     window.loadHistory = async function () {
       const date = document.getElementById("dateInput").value;
@@ -285,7 +286,6 @@
     };
 
     document.getElementById("dateInput").value = new Date().toISOString().split("T")[0];
-    // تحميل تقارير اليوم تلقائياً
     loadHistory();
   </script>
 </body>
