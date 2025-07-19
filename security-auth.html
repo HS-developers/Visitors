@@ -90,7 +90,7 @@
     </div>
   </footer>
   <script type="module">
-    // Typewriter effect
+    // Typewriter effect for main title
     const titleText = "نظام متابعة الزيارات<br>كمبوند كنز";
     const mainTitle = document.getElementById("mainTitle");
     let i = 0;
@@ -105,10 +105,12 @@
     }
     typeWriter();
 
+    // Show/hide password
     document.getElementById("showPass").addEventListener("change", function() {
       document.getElementById("password").type = this.checked ? "text" : "password";
     });
 
+    // Firebase config and imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
@@ -125,6 +127,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // Firebase Auth login function
     async function checkSecurityLogin() {
       const email = document.getElementById("email").value.trim().toLowerCase();
       const password = document.getElementById("password").value;
@@ -137,25 +140,29 @@
       }
 
       try {
+        // تسجيل الدخول عبر Firebase Auth
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const uid = userCredential.user.uid;
-        // تحقق أن الحساب هو أمن فعلاً (من Firestore)
-        const userDoc = await getDoc(doc(db, "users", uid));
-        if (userDoc.exists() && userDoc.data().isAdmin === true) {
-          sessionStorage.setItem("securityAuth", "true");
-          sessionStorage.setItem("securityEmail", email);
-          window.location.href = "security-dashboard.html";
-        } else {
-          errorMsg.textContent = "هذا الحساب ليس حساب أمن.";
+        const user = userCredential.user;
+
+        // تحقق من خاصية isAdmin في جدول users
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (!userDoc.exists() || !userDoc.data().isAdmin) {
+          errorMsg.textContent = "هذا الحساب غير مصرح للأمن.";
+          return;
         }
+
+        // تسجيل بيانات الجلسة وتحويل المستخدم للوحة التحكم
+        sessionStorage.setItem("securityAuth", "true");
+        sessionStorage.setItem("securityEmail", user.email);
+        window.location.href = "security-dashboard.html";
       } catch (err) {
-        errorMsg.textContent = "بيانات الدخول غير صحيحة.";
+        errorMsg.textContent = "بيانات الدخول غير صحيحة أو الحساب غير مصرح.";
       }
     }
 
+    document.getElementById("loginBtn").addEventListener("click", checkSecurityLogin);
     document.getElementById("email").addEventListener("keydown", function(e) { if(e.key === "Enter") checkSecurityLogin(); });
     document.getElementById("password").addEventListener("keydown", function(e) { if(e.key === "Enter") checkSecurityLogin(); });
-    document.getElementById("loginBtn").addEventListener("click", checkSecurityLogin);
   </script>
 </body>
 </html>
