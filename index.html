@@ -2,9 +2,9 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>تطبيق الزوار</title>
+  <title id="pageTitle">تطبيق الزوار</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link id="bootstrapLink" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600&display=swap" rel="stylesheet">
   <style>
     body {
@@ -22,6 +22,7 @@
       border-radius: 16px;
       box-shadow: 0 4px 18px #0002;
       padding: 38px 32px 30px;
+      position: relative;
     }
     .main-card h1 {
       font-size: 1.9rem;
@@ -110,20 +111,45 @@
       margin-bottom: 4px;
       font-size: 1em;
     }
+    .lang-btn {
+      position: absolute;
+      top: 14px;
+      left: 18px;
+      z-index: 15;
+      padding: 6px 11px;
+      font-size: 1.05rem;
+      border-radius: 8px;
+      font-weight: bold;
+      min-width: 36px;
+      min-height: 36px;
+      letter-spacing: 1px;
+      border: 1px solid #007bff;
+      background: #f2f2f2;
+      color: #007bff;
+      transition: background 0.2s, color 0.2s;
+    }
+    .lang-btn:hover {
+      background: #007bff;
+      color: #fff;
+    }
+    @media (max-width:600px) {
+      .main-card {padding: 24px 7px 18px; }
+      .lang-btn {top: 7px; left: 7px; font-size: 0.95em;}
+    }
   </style>
 </head>
 <body>
 <script>
 console.log("ownerHasAccount_v1 in localStorage:", localStorage.getItem("ownerHasAccount_v1"));
 </script>
-
   <div class="main-card text-center">
+    <button class="lang-btn btn" id="toggleLangBtn" type="button">EN</button>
     <img class="logo-img" src="kenz.jpg" alt="شعار كمبوند كنز">
-    <h1>مرحباً بك في تطبيق زوار<br>كمبوند كنز</h1>
-    <p class="mb-4 text-muted">اختر نوع الدخول:</p>
+    <h1 id="mainTitle">مرحباً بك في تطبيق زوار<br>كمبوند كنز</h1>
+    <p class="mb-4 text-muted" id="mainSubTitle">اختر نوع الدخول:</p>
     <div class="d-grid gap-3">
       <button id="ownerBtn" class="btn btn-primary btn-lg">صفحة المالك</button>
-      <a href="security-auth.html" class="btn btn-outline-secondary btn-lg">صفحة الأمن</a>
+      <a href="security-auth.html" class="btn btn-outline-secondary btn-lg" id="securityBtn">صفحة الأمن</a>
     </div>
   </div>
 
@@ -131,11 +157,11 @@ console.log("ownerHasAccount_v1 in localStorage:", localStorage.getItem("ownerHa
   <div id="ownerLoginModalBg" class="custom-modal-bg" style="display:none;">
     <div class="custom-modal">
       <button type="button" class="modal-close" id="closeOwnerLoginModal" title="إغلاق">×</button>
-      <div class="modal-title">تسجيل دخول المالك</div>
+      <div class="modal-title" id="modalTitle">تسجيل دخول المالك</div>
       <form id="ownerLoginForm" autocomplete="off">
         <input type="email" id="modalOwnerEmail" name="modalOwnerEmailX" class="form-control mb-2" placeholder="البريد الإلكتروني للمالك" required autocomplete="off">
         <input type="password" id="modalOwnerPassword" name="modalOwnerPasswordX" class="form-control mb-2" placeholder="كلمة السر" required autocomplete="current-password">
-        <button type="submit" class="btn btn-success w-100 mt-1 mb-2">دخول المالك</button>
+        <button type="submit" class="btn btn-success w-100 mt-1 mb-2" id="modalLoginBtn">دخول المالك</button>
         <div class="modal-error" id="modalOwnerLoginError"></div>
         <div class="modal-success" id="modalOwnerLoginSuccess"></div>
       </form>
@@ -143,6 +169,59 @@ console.log("ownerHasAccount_v1 in localStorage:", localStorage.getItem("ownerHa
   </div>
 
   <script type="module">
+    // ترجمة النصوص
+    let currentLang = "ar";
+    const texts = {
+      ar: {
+        pageTitle: "تطبيق الزوار",
+        mainTitle: "مرحباً بك في تطبيق زوار<br>كمبوند كنز",
+        mainSubTitle: "اختر نوع الدخول:",
+        ownerBtn: "صفحة المالك",
+        securityBtn: "صفحة الأمن",
+        modalTitle: "تسجيل دخول المالك",
+        modalOwnerEmail: "البريد الإلكتروني للمالك",
+        modalOwnerPassword: "كلمة السر",
+        modalLoginBtn: "دخول المالك",
+        modalError: "يرجى إدخال البريد وكلمة السر.",
+        modalErrorInvalid: "البريد أو كلمة السر غير صحيحة.",
+        modalSuccess: "تم تسجيل الدخول بنجاح، جاري التحويل...",
+        btnLang: "EN"
+      },
+      en: {
+        pageTitle: "Visitor App",
+        mainTitle: "Welcome to Visitors App<br>Kenz Compound",
+        mainSubTitle: "Choose login type:",
+        ownerBtn: "Owner Page",
+        securityBtn: "Security Page",
+        modalTitle: "Owner Login",
+        modalOwnerEmail: "Owner Email",
+        modalOwnerPassword: "Password",
+        modalLoginBtn: "Owner Login",
+        modalError: "Please enter email and password.",
+        modalErrorInvalid: "Email or password is incorrect.",
+        modalSuccess: "Login successful, redirecting...",
+        btnLang: "AR"
+      }
+    };
+
+    function switchLang() {
+      currentLang = currentLang === "ar" ? "en" : "ar";
+      document.documentElement.lang = currentLang;
+      document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
+      document.getElementById("pageTitle").textContent = texts[currentLang].pageTitle;
+      document.getElementById("mainTitle").innerHTML = texts[currentLang].mainTitle;
+      document.getElementById("mainSubTitle").textContent = texts[currentLang].mainSubTitle;
+      document.getElementById("ownerBtn").textContent = texts[currentLang].ownerBtn;
+      document.getElementById("securityBtn").textContent = texts[currentLang].securityBtn;
+      document.getElementById("toggleLangBtn").textContent = texts[currentLang].btnLang;
+      document.getElementById("modalTitle").textContent = texts[currentLang].modalTitle;
+      document.getElementById("modalOwnerEmail").placeholder = texts[currentLang].modalOwnerEmail;
+      document.getElementById("modalOwnerPassword").placeholder = texts[currentLang].modalOwnerPassword;
+      document.getElementById("modalLoginBtn").textContent = texts[currentLang].modalLoginBtn;
+    }
+
+    document.getElementById("toggleLangBtn").addEventListener("click", switchLang);
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import {
       getAuth,
@@ -196,7 +275,7 @@ console.log("ownerHasAccount_v1 in localStorage:", localStorage.getItem("ownerHa
       successDiv.textContent = "";
 
       if (!email || !password) {
-        errorDiv.textContent = "يرجى إدخال البريد وكلمة السر.";
+        errorDiv.textContent = texts[currentLang].modalError;
         return;
       }
 
@@ -205,19 +284,18 @@ console.log("ownerHasAccount_v1 in localStorage:", localStorage.getItem("ownerHa
         await signInWithEmailAndPassword(auth, email, password);
         // حفظ مؤشر أن هذا الجهاز أصبح به مالك مسجل (للمرات القادمة)
         localStorage.setItem("ownerHasAccount_v1", "yes");
-        successDiv.textContent = "تم تسجيل الدخول بنجاح، جاري التحويل...";
+        successDiv.textContent = texts[currentLang].modalSuccess;
         setTimeout(() => {
           window.location.href = "owner-dashboard.html";
         }, 800);
       } catch (err) {
         if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
-          errorDiv.textContent = "البريد أو كلمة السر غير صحيحة.";
+          errorDiv.textContent = texts[currentLang].modalErrorInvalid;
         } else {
           errorDiv.textContent = err.message;
         }
       }
     };
-
     // عند تسجيل الخروج في owner-dashboard.html يجب حذف localStorage.removeItem("ownerHasAccount_v1");
   </script>
 </body>
