@@ -235,6 +235,9 @@
           isAdmin: false
         });
 
+        // حفظ مؤشر أن هذا الجهاز أصبح به مالك مسجل (للمرات القادمة)
+        localStorage.setItem("ownerHasAccount_v1", "yes");
+
         successMsg.textContent = texts[currentLang].success;
         setTimeout(() => {
           window.location.href = "owner-dashboard.html";
