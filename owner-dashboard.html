@@ -2,9 +2,9 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام متابعة الزيارات - كمبوند كنز</title>
+  <title id="pageTitle">نظام متابعة الزيارات - كمبوند كنز</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link id="bootstrapLink" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -100,6 +100,27 @@
       text-decoration: underline;
       cursor: pointer;
     }
+    .lang-btn {
+      position: absolute;
+      top: 13px;
+      left: 12px;
+      z-index: 2;
+      padding: 6px 11px;
+      font-size: 1.05rem;
+      border-radius: 8px;
+      font-weight: bold;
+      min-width: 36px;
+      min-height: 36px;
+      letter-spacing: 1px;
+      border: 1px solid #007bff;
+      background: #f2f2f2;
+      color: #007bff;
+      transition: background 0.2s, color 0.2s;
+    }
+    .lang-btn:hover {
+      background: #007bff;
+      color: #fff;
+    }
     footer {
       position: fixed;
       right: 0;
@@ -121,43 +142,119 @@
       .container-card {padding: 20px 7px 13px;}
       body { padding-bottom: 90px; }
       footer { font-size: 0.95em; }
+      .lang-btn {top: 7px; left: 7px; font-size: 0.95em;}
     }
   </style>
 </head>
 <body>
+  <button class="lang-btn btn" id="toggleLangBtn">EN</button>
   <div class="container-card">
-    <div class="main-title-3d">
+    <div class="main-title-3d" id="mainTitle">
       نظام متابعة الزيارات<br>كمبوند كنز
     </div>
-    <h2 class="mb-3 text-center text-primary">لوحة تحكم المالك</h2>
+    <h2 class="mb-3 text-center text-primary" id="dashboardTitle">لوحة تحكم المالك</h2>
     <div id="ownerInfoBox" class="owner-info mb-4" style="display:none;">
-      <span><strong>المالك:</strong> <span id="displayOwnerName"></span></span>
-      <span><strong>رقم الوحدة:</strong> <span id="displayUnitNumber"></span></span>
-      <span><strong>رقم الهاتف:</strong> <span id="displayPhone"></span></span>
+      <span><strong id="ownerLabel">المالك:</strong> <span id="displayOwnerName"></span></span>
+      <span><strong id="unitLabel">رقم الوحدة:</strong> <span id="displayUnitNumber"></span></span>
+      <span><strong id="phoneLabel">رقم الهاتف:</strong> <span id="displayPhone"></span></span>
     </div>
     <div id="mainForm" style="display:none;">
-      <label>اسم الزائر:</label>
+      <label id="visitorLabel">اسم الزائر:</label>
       <input type="text" id="visitorName" class="form-control mb-3" placeholder="ادخل الاسم" />
 
-      <label>رقم السيارة:</label>
+      <label id="carLabel">رقم السيارة:</label>
       <input type="text" id="carNumber" class="form-control mb-3" placeholder="اختياري" />
 
       <button class="btn btn-success w-100 mb-2" id="submitVisitBtn">📥 تسجيل الزيارة</button>
-      <button class="btn btn-outline-primary w-100 mb-2" onclick="goToVisitsPage()">📄 عرض حالة الزيارات اليوم</button>
+      <button class="btn btn-outline-primary w-100 mb-2" onclick="goToVisitsPage()" id="viewVisitsBtn">📄 عرض حالة الزيارات اليوم</button>
       <div class="alert" id="confirmationAlert">✅ تم تأكيد دخول أحد الزوار</div>
       <span class="logout-link" id="logoutBtn">تسجيل خروج المالك</span>
     </div>
     <div id="loadingBox" style="text-align:center; margin: 35px 0; color: #007bff;">
       <div class="spinner-border" role="status"></div>
-      <div style="margin-top:10px;">جاري التحميل...</div>
+      <div style="margin-top:10px;" id="loadingText">جاري التحميل...</div>
     </div>
   </div>
   <footer>
-    <div class="copyright">
+    <div class="copyright" id="copyrightText">
       Copyright © 2025 "GENIUS Tech" All Rights Reserved
     </div>
   </footer>
   <script type="module">
+    // لغة الصفحة
+    let currentLang = "ar";
+    const texts = {
+      ar: {
+        pageTitle: "نظام متابعة الزيارات - كمبوند كنز",
+        mainTitle: "نظام متابعة الزيارات<br>كمبوند كنز",
+        dashboardTitle: "لوحة تحكم المالك",
+        ownerLabel: "المالك:",
+        unitLabel: "رقم الوحدة:",
+        phoneLabel: "رقم الهاتف:",
+        visitorLabel: "اسم الزائر:",
+        carLabel: "رقم السيارة:",
+        submitVisitBtn: "📥 تسجيل الزيارة",
+        viewVisitsBtn: "📄 عرض حالة الزيارات اليوم",
+        confirmationAlert: "✅ تم تأكيد دخول أحد الزوار",
+        logoutBtn: "تسجيل خروج المالك",
+        loadingText: "جاري التحميل...",
+        copyright: 'Copyright © 2025 "GENIUS Tech" All Rights Reserved',
+        btnLang: "EN",
+        errorOwnerName: "يرجى إدخال اسم الزائر",
+        errorOwnerData: "لم يتم تحميل بيانات المالك بعد، يرجى إعادة تحميل الصفحة",
+        successVisit: "✅ تم تسجيل الزيارة بنجاح"
+      },
+      en: {
+        pageTitle: "Visit Tracking System - Kenz Compound",
+        mainTitle: "Visit Tracking System<br>Kenz Compound",
+        dashboardTitle: "Owner Dashboard",
+        ownerLabel: "Owner:",
+        unitLabel: "Unit Number:",
+        phoneLabel: "Phone Number:",
+        visitorLabel: "Visitor Name:",
+        carLabel: "Car Number:",
+        submitVisitBtn: "📥 Register Visit",
+        viewVisitsBtn: "📄 View Today's Visits",
+        confirmationAlert: "✅ A visitor's entry has been confirmed",
+        logoutBtn: "Owner Logout",
+        loadingText: "Loading...",
+        copyright: 'Copyright © 2025 "GENIUS Tech" All Rights Reserved',
+        btnLang: "AR",
+        errorOwnerName: "Please enter visitor name",
+        errorOwnerData: "Owner data not loaded yet, please reload the page",
+        successVisit: "✅ Visit registered successfully"
+      }
+    };
+
+    function switchLang() {
+      currentLang = (currentLang === "ar") ? "en" : "ar";
+      document.documentElement.lang = currentLang;
+      document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
+      document.getElementById("pageTitle").textContent = texts[currentLang].pageTitle;
+      document.getElementById("mainTitle").innerHTML = texts[currentLang].mainTitle;
+      document.getElementById("dashboardTitle").textContent = texts[currentLang].dashboardTitle;
+      document.getElementById("ownerLabel").textContent = texts[currentLang].ownerLabel;
+      document.getElementById("unitLabel").textContent = texts[currentLang].unitLabel;
+      document.getElementById("phoneLabel").textContent = texts[currentLang].phoneLabel;
+      document.getElementById("visitorLabel").textContent = texts[currentLang].visitorLabel;
+      document.getElementById("visitorName").placeholder = texts[currentLang].visitorLabel;
+      document.getElementById("carLabel").textContent = texts[currentLang].carLabel;
+      document.getElementById("carNumber").placeholder = texts[currentLang].carLabel;
+      document.getElementById("submitVisitBtn").textContent = texts[currentLang].submitVisitBtn;
+      document.getElementById("viewVisitsBtn").textContent = texts[currentLang].viewVisitsBtn;
+      document.getElementById("confirmationAlert").textContent = texts[currentLang].confirmationAlert;
+      document.getElementById("logoutBtn").textContent = texts[currentLang].logoutBtn;
+      document.getElementById("loadingText").textContent = texts[currentLang].loadingText;
+      document.getElementById("copyrightText").textContent = texts[currentLang].copyright;
+      document.getElementById("toggleLangBtn").textContent = texts[currentLang].btnLang;
+      document.getElementById("bootstrapLink").href =
+        currentLang === "ar"
+          ? "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css"
+          : "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css";
+    }
+
+    document.getElementById("toggleLangBtn").addEventListener("click", switchLang);
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { 
       getAuth, 
@@ -235,12 +332,12 @@
       const carNumber = document.getElementById("carNumber").value.trim();
 
       if (!visitorName) {
-        alert("يرجى إدخال اسم الزائر");
+        alert(texts[currentLang].errorOwnerName);
         return;
       }
 
       if (!ownerData) {
-        alert("لم يتم تحميل بيانات المالك بعد، يرجى إعادة تحميل الصفحة");
+        alert(texts[currentLang].errorOwnerData);
         return;
       }
 
@@ -258,7 +355,7 @@
         ownerUid: ownerUid
       });
 
-      alert("✅ تم تسجيل الزيارة بنجاح");
+      alert(texts[currentLang].successVisit);
       document.getElementById("visitorName").value = "";
       document.getElementById("carNumber").value = "";
 
@@ -288,6 +385,7 @@
                 const audio = new Audio("dingo.mp3");
                 audio.play().catch(err => console.warn("لم يتم تشغيل الصوت:", err));
                 const alertDiv = document.getElementById("confirmationAlert");
+                alertDiv.textContent = texts[currentLang].confirmationAlert;
                 alertDiv.style.display = "block";
                 setTimeout(() => alertDiv.style.display = "none", 5000);
                 sessionStorage.setItem("soundAllowed", "false");
@@ -307,7 +405,6 @@
     // تسجيل الخروج
     document.getElementById("logoutBtn").onclick = async function() {
       await signOut(auth);
-      // localStorage.removeItem("ownerHasAccount_v1");
       window.location.href = "index.html";
     }
 
@@ -317,7 +414,6 @@
       clearTimeout(logoutTimer);
       logoutTimer = setTimeout(async () => {
         await signOut(auth);
-        // localStorage.removeItem("ownerHasAccount_v1");
         window.location.href = "index.html";
       }, 10 * 60 * 1000); // 10 دقائق
     }
