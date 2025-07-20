@@ -56,7 +56,6 @@
       min-height: 1.3em;
       font-weight: bold;
     }
-    /* --- ثابت أسفل الصفحة --- */
     footer {
       position: fixed;
       right: 0;
@@ -129,6 +128,7 @@
     // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
     const firebaseConfig = {
       apiKey: "AIzaSyBNudtJkLa0ZuXu0DO1IPLYVC-PtEdBrOE",
       authDomain: "zowar-c8626.firebaseapp.com",
@@ -138,9 +138,47 @@
       appId: "1:807825141119:web:db3b075d3f54474c3bbe4a"
     };
     const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // Login function using Firebase Authentication
+    // حماية الدخول من جهاز واحد
+    function getDeviceId() {
+      let id = localStorage.getItem("deviceId");
+      if (!id) {
+        id = Math.random().toString(36).substring(2) + Date.now();
+        localStorage.setItem("deviceId", id);
+      }
+      return id;
+    }
+    async function checkDeviceAndLogin(userUid, db) {
+      const deviceId = getDeviceId();
+      const userRef = doc(db, "users", userUid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+
+        if (userData.isAdmin === true) {
+          // منع دخول حسابات الأمن
+          return { allow: false, message: "هذا الحساب مخصص للأمن ولا يمكن تسجيل الدخول هنا." };
+        }
+
+        if (!userData.deviceId) {
+          // أول دخول من جهاز، احفظ معرف الجهاز
+          await updateDoc(userRef, { deviceId });
+          return { allow: true, message: "" };
+        } else if (userData.deviceId !== deviceId) {
+          // جهاز جديد - منع الدخول أو تنبيه المستخدم
+          return { allow: false, message: "تم تسجيل الدخول من جهاز جديد! إذا لم تكن أنت، يرجى التواصل مع الإدارة." };
+        } else {
+          // نفس الجهاز - السماح بالدخول
+          return { allow: true, message: "" };
+        }
+      }
+      return { allow: false, message: "حدث خطأ في بيانات الحساب." };
+    }
+
+    // Login function (Firestore users collection)
     async function checkOwnerLogin() {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value.trim();
@@ -155,14 +193,34 @@
       }
 
       try {
+        // تسجيل الدخول الرسمي عبر Firebase Auth
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        // الدخول ناجح، تحويل للمالك
+        const user = userCredential.user;
+
+        // تحقق من بيانات المستخدم في Firestore
+        const userCheck = await checkDeviceAndLogin(user.uid, db);
+
+        if (!userCheck.allow) {
+          errorMsg.textContent = userCheck.message;
+          return;
+        }
+
+        // فقط حسابات الملاك
+        sessionStorage.setItem("ownerPreUid", user.uid);
         successMsg.textContent = "تم تسجيل الدخول بنجاح، جاري التحويل...";
         setTimeout(() => {
-          window.location.href = "owner-dashboard.html";
+          window.location.href = "owner-create-account.html";
         }, 1000);
+
       } catch (err) {
-        errorMsg.textContent = "بيانات الدخول غير صحيحة أو غير مسجلة.";
+        // خطأ في تسجيل الدخول أو في الصلاحيات
+        if (err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
+          errorMsg.textContent = "بيانات الدخول غير صحيحة أو غير مسجلة.";
+        } else if (err.message) {
+          errorMsg.textContent = "حدث خطأ: " + err.message;
+        } else {
+          errorMsg.textContent = "حدث خطأ غير متوقع.";
+        }
       }
     }
 
