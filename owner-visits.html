@@ -2,9 +2,9 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام متابعة الزيارات - كمبوند كنز</title>
+  <title id="pageTitle">نظام متابعة الزيارات - كمبوند كنز</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link id="bootstrapLink" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -90,6 +90,27 @@
       border-radius: 10px;
       font-size: 1.1rem;
     }
+    .lang-btn {
+      position: absolute;
+      top: 13px;
+      left: 12px;
+      z-index: 2;
+      padding: 6px 11px;
+      font-size: 1.05rem;
+      border-radius: 8px;
+      font-weight: bold;
+      min-width: 36px;
+      min-height: 36px;
+      letter-spacing: 1px;
+      border: 1px solid #007bff;
+      background: #f2f2f2;
+      color: #007bff;
+      transition: background 0.2s, color 0.2s;
+    }
+    .lang-btn:hover {
+      background: #007bff;
+      color: #fff;
+    }
     footer {
       position: fixed;
       right: 0;
@@ -110,26 +131,94 @@
     @media (max-width:600px) {
       body { padding-bottom: 90px;}
       footer { font-size: 0.95em; }
+      .lang-btn {top: 7px; left: 7px; font-size: 0.95em;}
     }
   </style>
 </head>
 <body>
+  <button class="lang-btn btn" id="toggleLangBtn">EN</button>
   <div class="container-card">
-    <div class="main-title-3d">
+    <div class="main-title-3d" id="mainTitle">
       نظام متابعة الزيارات<br>كمبوند كنز
     </div>
-    <h2>📄 حالة الزيارات المسجلة اليوم</h2>
+    <h2 id="visitsTitle">📄 حالة الزيارات المسجلة اليوم</h2>
     <div id="visitsContainer">
-      <div class="text-center text-muted">جاري تحميل البيانات...</div>
+      <div class="text-center text-muted" id="loadingVisitsText">جاري تحميل البيانات...</div>
     </div>
-    <button class="btn btn-outline-primary w-100" onclick="window.location.href='owner-dashboard.html'">🔙 الرجوع لتسجيل زيارة جديدة</button>
+    <button class="btn btn-outline-primary w-100" id="backBtn" onclick="window.location.href='owner-dashboard.html'">🔙 الرجوع لتسجيل زيارة جديدة</button>
   </div>
   <footer>
-    <div class="copyright">
+    <div class="copyright" id="copyrightText">
       Copyright © 2025 "GENIUS Tech" All Rights Reserved
     </div>
   </footer>
   <script type="module">
+    // لغة الصفحة
+    let currentLang = "ar";
+    const texts = {
+      ar: {
+        pageTitle: "نظام متابعة الزيارات - كمبوند كنز",
+        mainTitle: "نظام متابعة الزيارات<br>كمبوند كنز",
+        visitsTitle: "📄 حالة الزيارات المسجلة اليوم",
+        loadingVisitsText: "جاري تحميل البيانات...",
+        noVisits: "لا توجد زيارات مسجلة حتى الآن.",
+        visitor: "الزائر:",
+        carNumber: "رقم السيارة:",
+        entered: "تم الدخول:",
+        visitTime: "وقت تسجيل الزيارة:",
+        yes: "نعم",
+        no: "لا",
+        entryTime: "وقت دخول الزائر:",
+        notAvailable: "غير متوفر",
+        notSet: "غير محدد",
+        backBtn: "🔙 الرجوع لتسجيل زيارة جديدة",
+        copyright: 'Copyright © 2025 "GENIUS Tech" All Rights Reserved',
+        btnLang: "EN",
+        error: "حدث خطأ أثناء تحميل البيانات."
+      },
+      en: {
+        pageTitle: "Visit Tracking System - Kenz Compound",
+        mainTitle: "Visit Tracking System<br>Kenz Compound",
+        visitsTitle: "📄 Today's Registered Visits",
+        loadingVisitsText: "Loading data...",
+        noVisits: "No visits registered yet.",
+        visitor: "Visitor:",
+        carNumber: "Car Number:",
+        entered: "Entered:",
+        visitTime: "Visit Registered At:",
+        yes: "Yes",
+        no: "No",
+        entryTime: "Entry Time:",
+        notAvailable: "Not available",
+        notSet: "Not set",
+        backBtn: "🔙 Back to Register New Visit",
+        copyright: 'Copyright © 2025 "GENIUS Tech" All Rights Reserved',
+        btnLang: "AR",
+        error: "Error loading data."
+      }
+    };
+
+    function switchLang() {
+      currentLang = (currentLang === "ar") ? "en" : "ar";
+      document.documentElement.lang = currentLang;
+      document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
+      document.getElementById("pageTitle").textContent = texts[currentLang].pageTitle;
+      document.getElementById("mainTitle").innerHTML = texts[currentLang].mainTitle;
+      document.getElementById("visitsTitle").textContent = texts[currentLang].visitsTitle;
+      document.getElementById("loadingVisitsText").textContent = texts[currentLang].loadingVisitsText;
+      document.getElementById("backBtn").textContent = texts[currentLang].backBtn;
+      document.getElementById("copyrightText").textContent = texts[currentLang].copyright;
+      document.getElementById("toggleLangBtn").textContent = texts[currentLang].btnLang;
+      document.getElementById("bootstrapLink").href =
+        currentLang === "ar"
+          ? "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css"
+          : "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css";
+      // إعادة تحميل الزيارات بالنص الجديد
+      if (window.lastVisitsData) renderVisits(window.lastVisitsData);
+    }
+
+    document.getElementById("toggleLangBtn").addEventListener("click", switchLang);
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import {
       getAuth,
@@ -174,7 +263,7 @@
       try {
         const docSnap = await getDoc(doc(db, "owners", user.uid));
         if (!docSnap.exists()) {
-          alert("لا توجد بيانات لهذا الحساب، يرجى التواصل مع الإدارة");
+          alert(texts[currentLang].error);
           await signOut(auth);
           window.location.href = "owner-auth.html";
           return;
@@ -182,7 +271,7 @@
         ownerUnitNumber = docSnap.data().unitNumber;
         loadVisits(ownerUnitNumber);
       } catch (err) {
-        visitsContainer.innerHTML = "<div class='alert alert-danger text-center'>حدث خطأ أثناء تحميل البيانات.</div>";
+        visitsContainer.innerHTML = `<div class='alert alert-danger text-center'>${texts[currentLang].error}</div>`;
       }
     });
 
@@ -197,34 +286,50 @@
       );
 
       unsubscribe = onSnapshot(q, snapshot => {
+        let visitsArr = [];
         if (snapshot.empty) {
-          visitsContainer.innerHTML = "<div class='text-center text-muted'>لا توجد زيارات مسجلة حتى الآن.</div>";
+          visitsContainer.innerHTML = `<div class='text-center text-muted'>${texts[currentLang].noVisits}</div>`;
+          window.lastVisitsData = [];
           return;
         }
         visitsContainer.innerHTML = "";
         let counter = 1;
         snapshot.forEach(doc => {
           const data = doc.data();
-          const div = document.createElement("div");
-          div.className = "visit" + (data.entered ? " entered" : "");
-          div.innerHTML = `
-            <div class="d-flex align-items-center mb-2">
-              <span class="badge bg-secondary me-2">${counter++}</span>
-              <strong>الزائر:</strong> ${data.visitorName}
-            </div>
-            <div><strong>رقم السيارة:</strong> ${data.carNumber || "غير محدد"}</div>
-            <div><strong>تم الدخول:</strong> ${data.entered ? "<span class='badge bg-success'>نعم</span>" : "<span class='badge bg-danger'>لا</span>"}</div>
-            <div><strong>وقت تسجيل الزيارة:</strong> ${data.timestamp?.toDate().toLocaleTimeString() || "غير متوفر"}</div>
-            ${data.entered ? `<div><strong>وقت دخول الزائر:</strong> ${
-              data.entryTime
-                ? (data.entryTime.seconds
-                    ? new Date(data.entryTime.seconds * 1000).toLocaleTimeString()
-                    : new Date(data.entryTime).toLocaleTimeString())
-                : "—"
-            }</div>` : ""}
-          `;
-          visitsContainer.appendChild(div);
+          visitsArr.push(data);
         });
+        window.lastVisitsData = visitsArr;
+        renderVisits(visitsArr);
+      });
+    }
+
+    function renderVisits(visitsArr) {
+      visitsContainer.innerHTML = "";
+      let counter = 1;
+      if (visitsArr.length === 0) {
+        visitsContainer.innerHTML = `<div class='text-center text-muted'>${texts[currentLang].noVisits}</div>`;
+        return;
+      }
+      visitsArr.forEach(data => {
+        const div = document.createElement("div");
+        div.className = "visit" + (data.entered ? " entered" : "");
+        div.innerHTML = `
+          <div class="d-flex align-items-center mb-2">
+            <span class="badge bg-secondary me-2">${counter++}</span>
+            <strong>${texts[currentLang].visitor}</strong> ${data.visitorName}
+          </div>
+          <div><strong>${texts[currentLang].carNumber}</strong> ${data.carNumber || texts[currentLang].notSet}</div>
+          <div><strong>${texts[currentLang].entered}</strong> ${data.entered ? `<span class='badge bg-success'>${texts[currentLang].yes}</span>` : `<span class='badge bg-danger'>${texts[currentLang].no}</span>`}</div>
+          <div><strong>${texts[currentLang].visitTime}</strong> ${data.timestamp?.toDate().toLocaleTimeString() || texts[currentLang].notAvailable}</div>
+          ${data.entered ? `<div><strong>${texts[currentLang].entryTime}</strong> ${
+            data.entryTime
+              ? (data.entryTime.seconds
+                  ? new Date(data.entryTime.seconds * 1000).toLocaleTimeString()
+                  : new Date(data.entryTime).toLocaleTimeString())
+              : texts[currentLang].notAvailable
+          }</div>` : ""}
+        `;
+        visitsContainer.appendChild(div);
       });
     }
 
